@@ -1,0 +1,5 @@
+{
+  "name": "物理安全档案系统",
+  "description": "一个专业的物理安全监控与档案管理仪表盘，提供实时风险评估、整改进度跟踪及安全状态概览。",
+  "requestFramePermissions": []
+}
