@@ -853,7 +853,7 @@ export default function App() {
 
                   
                   {/* Warning Card */}
-                  <div className="rounded-xl p-4 flex items-center relative" style={{ backgroundColor: '#FFFFFF', backgroundImage: 'url(/Vector-3226.png)', backgroundRepeat: 'no-repeat', backgroundPosition: 'left top', backgroundSize: 'auto', paddingBottom: '0px' }}>
+                  <div className="rounded-xl p-4 flex items-center relative" style={{ backgroundColor: '#FFFFFF', backgroundImage: 'url(./Vector-3226.png)', backgroundRepeat: 'no-repeat', backgroundPosition: 'left top', backgroundSize: 'auto', paddingBottom: '0px' }}>
                     {/* Safety Overview */}
                     <div className="flex-1 relative">
                       <div className="flex items-center" style={{ alignItems: 'center', minHeight: '36px' }}>
