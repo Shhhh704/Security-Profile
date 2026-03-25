@@ -287,14 +287,17 @@ export default function WorkplaceDashboard() {
         return b.redRiskCount - a.redRiskCount;
       }
       
-      if (sortBy === 'name') {
-        return sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+      if (sortBy === 'rectificationTasks') {
+        const totalA = a.rectificationTasks.pending + a.rectificationTasks.overdue;
+        const totalB = b.rectificationTasks.pending + b.rectificationTasks.overdue;
+        return sortOrder === 'asc' ? totalA - totalB : totalB - totalA;
       }
       
-      if (sortBy === 'city') {
-        return sortOrder === 'asc' ? a.city.localeCompare(b.city) : b.city.localeCompare(a.city);
+      if (sortBy === 'safeDays') {
+        const daysA = a.safeDays || 0;
+        const daysB = b.safeDays || 0;
+        return sortOrder === 'asc' ? daysA - daysB : daysB - daysA;
       }
-      
 
       
       return 0;
@@ -419,7 +422,7 @@ export default function WorkplaceDashboard() {
                 placeholder="搜索职场名称"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               />
             </div>
             <div className="relative w-40">
@@ -503,7 +506,7 @@ export default function WorkplaceDashboard() {
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
                       <th 
-                        className="px-4 py-3 text-left text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-100 select-none"
+                        className="px-4 py-3 text-left text-sm font-semibold text-gray-600 cursor-pointer hover:bg-gray-100 select-none"
                         onClick={() => handleSort('status')}
                       >
                         <div className="flex items-center gap-1">
@@ -511,28 +514,28 @@ export default function WorkplaceDashboard() {
                           {sortBy === 'status' && (sortOrder === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
                         </div>
                       </th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">职场名称</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">城市</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">风险类型</th>
                       <th 
-                        className="px-4 py-3 text-left text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-100 select-none"
-                        onClick={() => handleSort('name')}
+                        className="px-4 py-3 text-left text-sm font-semibold text-gray-600 cursor-pointer hover:bg-gray-100 select-none"
+                        onClick={() => handleSort('rectificationTasks')}
                       >
                         <div className="flex items-center gap-1">
-                          职场名称
-                          {sortBy === 'name' && (sortOrder === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
+                          待整改任务
+                          {sortBy === 'rectificationTasks' && (sortOrder === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
                         </div>
                       </th>
                       <th 
-                        className="px-4 py-3 text-left text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-100 select-none"
-                        onClick={() => handleSort('city')}
+                        className="px-4 py-3 text-left text-sm font-semibold text-gray-600 cursor-pointer hover:bg-gray-100 select-none"
+                        onClick={() => handleSort('safeDays')}
                       >
                         <div className="flex items-center gap-1">
-                          城市
-                          {sortBy === 'city' && (sortOrder === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
+                          持续安全天数
+                          {sortBy === 'safeDays' && (sortOrder === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
                         </div>
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">风险类型</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">待整改任务</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">持续安全天数</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600" style={{ width: '120px' }}>操作</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600" style={{ width: '120px' }}>操作</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
