@@ -65,6 +65,7 @@ interface SafetyRiskType {
 
 interface ManualCalibration {
   riskTypeId: string;
+  calibratedStatus: 'green' | 'orange' | 'red';
   calibratedIndicators: SafetyIndicator[];
   calibratedAt: string;
 }
@@ -324,6 +325,7 @@ export default function App() {
   const [manualCalibrations, setManualCalibrations] = useState<Record<string, ManualCalibration>>({});
   const [isCalibrationDrawerOpen, setIsCalibrationDrawerOpen] = useState(false);
   const [calibratingIndicatorsByType, setCalibratingIndicatorsByType] = useState<Record<string, SafetyIndicator[]>>({});
+  const [calibratingStatusByType, setCalibratingStatusByType] = useState<Record<string, 'green' | 'orange' | 'red'>>({});
 
   const [officeInfo, setOfficeInfo] = useState<OfficeInfo>({
     builtYear: '2015',
@@ -515,13 +517,23 @@ export default function App() {
 
   const openCalibrationDrawer = () => {
     const indicatorsByType: Record<string, SafetyIndicator[]> = {};
+    const statusByType: Record<string, 'green' | 'orange' | 'red'> = {};
     SAFETY_RISK_TYPES.forEach(riskType => {
       const existingCalibration = manualCalibrations[riskType.id];
       indicatorsByType[riskType.id] = existingCalibration 
         ? [...existingCalibration.calibratedIndicators] 
         : [...riskType.indicators];
+      
+      if (existingCalibration) {
+        statusByType[riskType.id] = existingCalibration.calibratedStatus;
+      } else {
+        const hasRed = riskType.indicators.some(i => i.status === 'red');
+        const hasOrange = riskType.indicators.some(i => i.status === 'orange');
+        statusByType[riskType.id] = hasRed ? 'red' : hasOrange ? 'orange' : 'green';
+      }
     });
     setCalibratingIndicatorsByType(indicatorsByType);
+    setCalibratingStatusByType(statusByType);
     setIsCalibrationDrawerOpen(true);
   };
 
@@ -537,9 +549,11 @@ export default function App() {
     
     SAFETY_RISK_TYPES.forEach(riskType => {
       const indicators = calibratingIndicatorsByType[riskType.id];
-      if (indicators) {
+      const status = calibratingStatusByType[riskType.id];
+      if (indicators && status) {
         newCalibrations[riskType.id] = {
           riskTypeId: riskType.id,
+          calibratedStatus: status,
           calibratedIndicators: indicators,
           calibratedAt
         };
@@ -560,7 +574,12 @@ export default function App() {
     }
   };
 
-
+  const updateRiskTypeStatus = (riskTypeId: string, status: 'green' | 'orange' | 'red') => {
+    setCalibratingStatusByType(prev => ({
+      ...prev,
+      [riskTypeId]: status
+    }));
+  };
 
   const updateIndicatorStatus = (riskTypeId: string, index: number, status: 'green' | 'orange' | 'red') => {
     setCalibratingIndicatorsByType(prev => ({
@@ -1773,93 +1792,119 @@ export default function App() {
 
                 <div className="flex-1 overflow-y-auto p-4">
                   <div className="space-y-6">
-                    {SAFETY_RISK_TYPES.map((riskType) => {
-                      const currentCalibration = manualCalibrations[riskType.id];
-                      const indicators = calibratingIndicatorsByType[riskType.id] || [];
-                      
-                      return (
-                        <div key={riskType.id} className="space-y-4">
-                          {currentCalibration && (
-                            <div className="p-3 bg-tag-green-bg/30 border border-tag-green-bg rounded-lg">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {SAFETY_RISK_TYPES.map((riskType) => {
+                        const currentCalibration = manualCalibrations[riskType.id];
+                        const status = calibratingStatusByType[riskType.id] || 'green';
+                        const indicators = calibratingIndicatorsByType[riskType.id] || [];
+                        
+                        const statusColor = status === 'red' ? '#E22E28' : status === 'orange' ? '#E8921C' : '#34A853';
+                        const cardBgColor = status === 'red' ? 'bg-red-50' : status === 'orange' ? 'bg-yellow-50' : 'bg-green-50';
+                        const titleColor = status === 'red' ? 'text-red-600' : status === 'orange' ? 'text-yellow-600' : 'text-green-600';
+                        
+                        return (
+                          <div key={riskType.id} className="rounded-xl overflow-hidden transition-opacity border" style={{ borderColor: '#DEE0E3', borderWidth: '0.5px' }}>
+                            {currentCalibration && (
+                              <div className="bg-tag-green-bg/30 border-b border-tag-green-bg p-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="inline-flex items-center px-2 py-0.5 bg-tag-green-bg text-tag-green-text text-xs rounded-full">
+                                      人工校准
+                                    </span>
+                                    <span className="text-xs text-text-caption">校准时间：{currentCalibration.calibratedAt}</span>
+                                  </div>
+                                  <button
+                                    onClick={() => deleteCalibration(riskType.id)}
+                                    className="text-xs text-red-500 hover:text-red-600 transition-colors"
+                                  >
+                                    删除
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            <div className={currentCalibration ? 'py-2 px-3' : 'py-2 px-3'}>
+                              <div className="flex items-center gap-2 mb-2">
+                                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <circle cx="4" cy="4" r="4" fill={statusColor}/>
+                                </svg>
+                                <span className={`text-sm font-semibold ${titleColor}`}>
+                                  {riskType.name}{currentCalibration && '（人工校准）'}
+                                </span>
+                              </div>
+                              
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                  <span className="inline-flex items-center px-2 py-0.5 bg-tag-green-bg text-tag-green-text text-xs rounded-full">
-                                    人工校准
-                                  </span>
-                                  <span className="text-xs text-text-caption">校准时间：{currentCalibration.calibratedAt}</span>
+                                  <button
+                                    onClick={() => updateRiskTypeStatus(riskType.id, 'green')}
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${
+                                      status === 'green'
+                                        ? 'bg-green-500 border-green-500'
+                                        : 'bg-white border-gray-200 hover:border-green-500'
+                                    }`}
+                                  >
+                                    {status === 'green' && <CheckCircle2 size={12} className="text-white" />}
+                                  </button>
+                                  <button
+                                    onClick={() => updateRiskTypeStatus(riskType.id, 'orange')}
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${
+                                      status === 'orange'
+                                        ? 'bg-yellow-500 border-yellow-500'
+                                        : 'bg-white border-gray-200 hover:border-yellow-500'
+                                    }`}
+                                  >
+                                    {status === 'orange' && <AlertCircle size={12} className="text-white" />}
+                                  </button>
+                                  <button
+                                    onClick={() => updateRiskTypeStatus(riskType.id, 'red')}
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${
+                                      status === 'red'
+                                        ? 'bg-red-500 border-red-500'
+                                        : 'bg-white border-gray-200 hover:border-red-500'
+                                    }`}
+                                  >
+                                    {status === 'red' && <AlertCircle size={12} className="text-white" />}
+                                  </button>
                                 </div>
-                                <button
-                                  onClick={() => deleteCalibration(riskType.id)}
-                                  className="text-xs text-red-500 hover:text-red-600 transition-colors"
-                                >
-                                  删除校准
-                                </button>
                               </div>
                             </div>
-                          )}
-                          
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-base font-bold text-text-title">
-                              {riskType.name}
-                            </h3>
-                            {currentCalibration && (
-                              <span className="inline-flex items-center px-1.5 py-0.5 bg-tag-green-bg text-tag-green-text text-[10px] rounded-full">
-                                人工校准
-                              </span>
-                            )}
-                          </div>
-                          
-                          <div className="space-y-3">
-                            {indicators.map((indicator, index) => (
-                              <div key={index} className="p-4 bg-bg-content-base rounded-lg border border-divider-light">
-                                <div className="flex items-center justify-between mb-3">
-                                  <span className="text-sm font-medium text-text-title">{indicator.label}</span>
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      onClick={() => updateIndicatorStatus(riskType.id, index, 'green')}
-                                      className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
-                                        indicator.status === 'green'
-                                          ? 'bg-status-green border-status-green'
-                                          : 'bg-white border-divider-light hover:border-status-green'
-                                      }`}
-                                    >
-                                      {indicator.status === 'green' && <CheckCircle2 size={16} className="text-white" />}
-                                    </button>
-                                    <button
-                                      onClick={() => updateIndicatorStatus(riskType.id, index, 'orange')}
-                                      className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
-                                        indicator.status === 'orange'
-                                          ? 'bg-status-orange border-status-orange'
-                                          : 'bg-white border-divider-light hover:border-status-orange'
-                                      }`}
-                                    >
-                                      {indicator.status === 'orange' && <AlertCircle size={16} className="text-white" />}
-                                    </button>
-                                    <button
-                                      onClick={() => updateIndicatorStatus(riskType.id, index, 'red')}
-                                      className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
-                                        indicator.status === 'red'
-                                          ? 'bg-status-red border-status-red'
-                                          : 'bg-white border-divider-light hover:border-status-red'
-                                      }`}
-                                    >
-                                      {indicator.status === 'red' && <AlertCircle size={16} className="text-white" />}
-                                    </button>
-                                  </div>
-                                </div>
-                                <input
-                                  type="text"
-                                  value={indicator.value}
-                                  onChange={(e) => updateIndicatorValue(riskType.id, index, e.target.value)}
-                                  className="w-full px-3 py-2 border border-divider-light rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                  placeholder="输入指标值"
-                                />
+                            <div className="bg-white p-3 pr-3">
+                              <div className="flex flex-col gap-2">
+                                {indicators.map((indicator, idx) => {
+                                  return (
+                                    <div key={idx} className="flex items-center text-xs gap-4 pr-3" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                                      <span className="text-text-caption flex-1">{indicator.label}</span>
+                                      <div className="flex items-center gap-2" style={{ paddingLeft: 0, paddingRight: 0, width: '60px' }}>
+                                        {indicator.status === 'green' ? (
+                                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-tag-green-text">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <path d="m9 12 2 2 4-4"></path>
+                                          </svg>
+                                        ) : indicator.status === 'red' ? (
+                                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M6.42188 1.41699C6.66252 1.00087 7.2406 0.974752 7.52344 1.33887L7.57617 1.41699L13.1299 11.3281L13.1748 11.418C13.3494 11.8453 13.0369 12.334 12.5557 12.334H1.44141C0.960349 12.3337 0.648549 11.8452 0.823242 11.418L0.864258 11.334L0.867188 11.3281L6.42188 1.41699Z" stroke="#E22E28"/>
+                                            <path d="M6.32812 5.03425C6.32812 4.812 6.50829 4.63184 6.73054 4.63184H7.26709C7.48934 4.63184 7.66951 4.812 7.66951 5.03425V8.25357C7.66951 8.47582 7.48934 8.65598 7.26709 8.65598H6.73054C6.50829 8.65598 6.32812 8.47582 6.32812 8.25357V5.03425Z" fill="#E22E28"/>
+                                            <path d="M6.32812 9.59495C6.32812 9.3727 6.50829 9.19254 6.73054 9.19254H7.26709C7.48934 9.19254 7.66951 9.3727 7.66951 9.59495V10.1315C7.66951 10.3538 7.48934 10.5339 7.26709 10.5339H6.73054C6.50829 10.5339 6.32812 10.3538 6.32812 10.1315V9.59495Z" fill="#E22E28"/>
+                                          </svg>
+                                        ) : (
+                                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M6.42188 1.41699C6.66252 1.00087 7.2406 0.974752 7.52344 1.33887L7.57617 1.41699L13.1299 11.3281L13.1748 11.418C13.3494 11.8453 13.0369 12.334 12.5557 12.334H1.44141C0.960349 12.3337 0.648549 11.8452 0.823242 11.418L0.864258 11.334L0.867188 11.3281L6.42188 1.41699Z" stroke="#E22E28"/>
+                                            <path d="M6.32812 5.03425C6.32812 4.812 6.50829 4.63184 6.73054 4.63184H7.26709C7.48934 4.63184 7.66951 4.812 7.66951 5.03425V8.25357C7.66951 8.47582 7.48934 8.65598 7.26709 8.65598H6.73054C6.50829 8.65598 6.32812 8.47582 6.32812 8.25357V5.03425Z" fill="#E22E28"/>
+                                            <path d="M6.32812 9.59495C6.32812 9.3727 6.50829 9.19254 6.73054 9.19254H7.26709C7.48934 9.19254 7.66951 9.3727 7.66951 9.59495V10.1315C7.66951 10.3538 7.48934 10.5339 7.26709 10.5339H6.73054C6.50829 10.5339 6.32812 10.3538 6.32812 10.1315V9.59495Z" fill="#E22E28"/>
+                                          </svg>
+                                        )}
+                                        <span className={indicator.status === 'green' ? 'text-tag-green-text font-medium' : indicator.status === 'orange' ? 'font-medium' : 'text-red-600 font-medium'} style={{ color: indicator.status === 'orange' ? '#E22E28' : undefined }}>
+                                          {indicator.value}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
-                            ))}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </motion.div>
