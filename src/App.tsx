@@ -874,6 +874,21 @@ export default function App() {
 
                   {/* Safety Status Section */}
                   <div id="card-safety" ref={safetyRef} className="p-4">
+                    {/* Section Header */}
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-base font-medium text-text-title">安全概况</h3>
+                      <button 
+                        onClick={openCalibrationDrawer}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-primary rounded-lg text-primary text-sm font-medium hover:bg-divider-light transition-all"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                          <path d="M10.2506 4.22599L10.2467 4.22234L10.4623 4.0067C10.6897 3.77932 10.6902 3.41081 10.4634 3.18283L8.46015 1.16901L8.45906 1.16792C8.23126 0.940119 7.86191 0.940119 7.63411 1.16792L7.22271 1.57932L7.22845 1.58509L1.16797 7.69221V9.91705C1.16797 10.2392 1.42914 10.5004 1.7513 10.5004H3.97615L10.2506 4.22599ZM8.34127 4.4529L7.16606 3.27768L8.03296 2.39383L9.21313 3.5802L8.34127 4.4529ZM6.3491 4.11064L7.51672 5.27827L3.48411 9.31476H3.48233L2.35361 8.18603V8.18425L6.3491 4.11064Z" fill="#1456F0"/>
+                          <path d="M1.7513 11.6671C1.42914 11.6671 1.16797 11.9282 1.16797 12.2504C1.16797 12.5726 1.42914 12.8337 1.7513 12.8337H12.2513C12.5735 12.8337 12.8346 12.5726 12.8346 12.2504C12.8346 11.9282 12.5735 11.6671 12.2513 11.6671H1.7513Z" fill="#1456F0"/>
+                        </svg>
+                        校准
+                      </button>
+                    </div>
+
                     {/* Warning Group */}
                     <div className="rounded-lg p-0 mb-7">
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
