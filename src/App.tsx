@@ -739,11 +739,12 @@ export default function App() {
 
         return {
           ...row,
-          children: filteredChildren
+          children: filteredChildren,
+          originalChildren: row.children
         };
       }
       return null;
-    }).filter(Boolean) as RectificationItem[];
+    }).filter(Boolean) as (RectificationItem & { originalChildren?: RectificationItem[] })[];
   };
 
   useEffect(() => {
@@ -827,32 +828,39 @@ export default function App() {
               {/* Card 1: Workplace Info */}
               <div className="relative border-b border-divider-light bg-white sticky top-0 z-40">
                 <div className="relative z-10 p-4 pb-0 max-w-[1000px] mx-auto">
-                  <div className="flex flex-col gap-2 mb-2">
-                    <button
-                      onClick={() => navigate('/')}
-                      className="inline-flex items-center gap-1.5 self-start px-2.5 py-1.5 hover:bg-bg-overlay rounded-lg transition-colors text-primary text-sm font-medium"
-                    >
-                      <ArrowLeft size={16} className="text-primary" />
-                      返回列表
-                    </button>
-                    <h2 className="font-semibold text-text-title" style={{ fontSize: '22px' }}>{currentWorkplace.name}</h2>
-                  </div>
-                  
-                  <div className="flex flex-wrap items-center gap-y-2 mt-3">
-                    <div className="text-text-caption text-sm">
-                      地址：{currentWorkplace.address}
-                    </div>
-                    <div className="w-[1px] h-3 bg-divider mx-2" />
-                    <div className="text-text-caption text-sm">
-                      占地面积：{currentWorkplace.area} ㎡
-                    </div>
-                    <div className="w-[1px] h-3 bg-divider mx-2" />
-                    <div className="text-text-caption text-sm">
-                      出入口数量：{currentWorkplace.entranceCount} 个
-                    </div>
-                    <div className="w-[1px] h-3 bg-divider mx-2" />
-                    <div className="text-text-caption text-sm">
-                      可用工位数：{currentWorkplace.workstations} 个
+                  <button
+                    onClick={() => navigate('/')}
+                    className="inline-flex items-center gap-1.5 pr-2.5 py-1.5 hover:bg-bg-overlay rounded-lg transition-colors text-primary text-sm font-medium mb-2"
+                  >
+                    <ArrowLeft size={16} className="text-primary" />
+                    返回列表
+                  </button>
+                  <div className="flex items-start gap-4">
+                    <img 
+                      src={`https://copilot-cn.bytedance.net/api/ide/v1/text_to_image?prompt=现代化商业写字楼建筑外观&image_size=landscape_4_3`}
+                      alt={currentWorkplace.name}
+                      className="w-[100px] h-[60px] object-cover rounded-lg shrink-0 mt-1"
+                    />
+                    <div className="flex-1">
+                      <h2 className="font-semibold text-text-title" style={{ fontSize: '22px' }}>{currentWorkplace.name}</h2>
+                      
+                      <div className="flex flex-wrap items-center gap-y-2 mt-3">
+                        <div className="text-text-caption text-sm">
+                          地址：{currentWorkplace.address}
+                        </div>
+                        <div className="w-[1px] h-3 bg-divider mx-2" />
+                        <div className="text-text-caption text-sm">
+                          占地面积：{currentWorkplace.area} ㎡
+                        </div>
+                        <div className="w-[1px] h-3 bg-divider mx-2" />
+                        <div className="text-text-caption text-sm">
+                          出入口数量：{currentWorkplace.entranceCount} 个
+                        </div>
+                        <div className="w-[1px] h-3 bg-divider mx-2" />
+                        <div className="text-text-caption text-sm">
+                          可用工位数：{currentWorkplace.workstations} 个
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
@@ -1174,8 +1182,8 @@ export default function App() {
                                 <td className="px-4 py-3 text-sm text-text-body" style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.analysis}</td>
                                 <td className="px-4 py-3 text-sm text-text-body" style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}></td>
                                 <td className="px-4 py-3 text-sm text-text-body">
-                                  {row.children && row.children.length > 0 ? (
-                                    <StatusBadge type={getAggregatedProgress(row.children)} />
+                                  {row.originalChildren && row.originalChildren.length > 0 ? (
+                                    <StatusBadge type={getAggregatedProgress(row.originalChildren)} />
                                   ) : (
                                     <StatusBadge type={row.progress} />
                                   )}

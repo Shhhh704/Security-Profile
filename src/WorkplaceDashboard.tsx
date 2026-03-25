@@ -46,14 +46,13 @@ const MOCK_WORKPLACES: Workplace[] = [
     city: '北京',
     status: 'red',
     redRiskCount: 2,
-    yellowRiskCount: 1,
-    rectificationTasks: { pending: 4, overdue: 2 },
+    yellowRiskCount: 0,
+    rectificationTasks: { pending: 3, overdue: 1 },
     employeeCount: 1250,
     lastUpdate: '2026-03-20 14:30',
     risks: [
       { type: '消防', level: 'red' },
-      { type: '财产损失', level: 'red' },
-      { type: '出入', level: 'yellow' }
+      { type: '出入', level: 'red' }
     ]
   },
   {
@@ -213,6 +212,16 @@ export default function WorkplaceDashboard() {
   const [riskTypeFilter, setRiskTypeFilter] = useState<string>('all');
   const [overdueFilter, setOverdueFilter] = useState<string>('all');
 
+  const hasFilters = searchQuery || statusFilter !== 'all' || cityFilter !== 'all' || riskTypeFilter !== 'all' || overdueFilter !== 'all';
+
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setCityFilter('all');
+    setRiskTypeFilter('all');
+    setOverdueFilter('all');
+  };
+
   // Simulate API Fetch
   useEffect(() => {
     const fetchData = async () => {
@@ -355,11 +364,7 @@ export default function WorkplaceDashboard() {
   };
 
   const getRowBorderColor = (status: WorkplaceStatus) => {
-    switch (status) {
-      case 'red': return 'border-l-red-600';
-      case 'yellow': return 'border-l-orange-500';
-      default: return 'border-l-transparent';
-    }
+    return 'border-l-transparent';
   };
 
   return (
@@ -476,6 +481,14 @@ export default function WorkplaceDashboard() {
               </select>
               <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
+            {hasFilters && (
+              <button
+                onClick={clearAllFilters}
+                className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-all"
+              >
+                清空
+              </button>
+            )}
           </div>
           <div className="text-sm text-gray-500">
             最后更新: {stats.latestUpdate}
@@ -584,7 +597,7 @@ export default function WorkplaceDashboard() {
                             </span>
                             {workplace.rectificationTasks.overdue > 0 && (
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700">
-                                {workplace.rectificationTasks.overdue}项逾期
+                                {workplace.rectificationTasks.overdue} 项逾期
                               </span>
                             )}
                           </div>
