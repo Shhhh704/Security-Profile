@@ -259,6 +259,24 @@ const StatusBadge = ({ type }: { type: RectificationItem['progress'] }) => {
   );
 };
 
+const SafetyStatusBadge = ({ status }: { status: RectificationItem['status'] }) => {
+  const styles = {
+    red: 'bg-red-50 text-red-600',
+    yellow: 'bg-yellow-50 text-yellow-700',
+    green: 'bg-green-50 text-green-600',
+  };
+  const labels = {
+    red: '红灯',
+    yellow: '黄灯',
+    green: '绿灯',
+  };
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${styles[status]}`}>
+      {labels[status]}
+    </span>
+  );
+};
+
 const getAggregatedProgress = (children: RectificationItem[]): RectificationItem['progress'] => {
   const priority: Record<string, number> = {
     'overdue': 4,
@@ -312,6 +330,7 @@ export default function App() {
   const [hasEditPermission] = useState(true);
   const [selectedRectificationFilter, setSelectedRectificationFilter] = useState<string | null>(null);
   const [selectedRiskType, setSelectedRiskType] = useState<string | null>(null);
+  const [selectedSafetyStatus, setSelectedSafetyStatus] = useState<'red' | 'yellow' | 'green' | null>(null);
   const [currentWorkplace, setCurrentWorkplace] = useState<Workplace>(WORKPLACES[0]);
   const [isWorkplaceDrawerOpen, setIsWorkplaceDrawerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -489,9 +508,36 @@ export default function App() {
   const [editingRiskFeatures, setEditingRiskFeatures] = useState('');
   const [editingProtectionMeasures, setEditingProtectionMeasures] = useState('');
   const [activeEditor, setActiveEditor] = useState<'riskFeatures' | 'protectionMeasures' | null>(null);
+  const [expandedEmergencyTypes, setExpandedEmergencyTypes] = useState<string[]>([]);
+
+  const riskTypeToRectificationTypeMap: Record<string, string> = {
+    '出入安全': '出入风险',
+    '消防安全': '消防风险'
+  };
 
   const toggleRow = (id: string) => {
     setExpandedRows(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const getRectificationCountForRiskType = (riskTypeName: string): number => {
+    const rectificationType = riskTypeToRectificationTypeMap[riskTypeName];
+    if (!rectificationType) return 0;
+    const rectificationItem = RECTIFICATION_DATA.find(item => item.type === rectificationType);
+    return rectificationItem?.children?.length || 0;
+  };
+
+  const handleViewRectification = (riskTypeName: string) => {
+    const rectificationType = riskTypeToRectificationTypeMap[riskTypeName];
+    if (rectificationType) {
+      setSelectedRectificationFilter(null);
+      setActiveTab('rectification');
+      setTimeout(() => {
+        if (rectificationRef.current && contentRef.current) {
+          const offset = rectificationRef.current.offsetTop - 200;
+          contentRef.current.scrollTo({ top: offset, behavior: 'smooth' });
+        }
+      }, 100);
+    }
   };
 
   const openTaskDetail = (task: RectificationItem) => {
@@ -747,6 +793,11 @@ export default function App() {
         rowMatches = row.type === selectedRiskType || childTypeMatches;
       }
 
+      if (selectedSafetyStatus) {
+        const childStatusMatches = row.children?.some(child => child.status === selectedSafetyStatus) ?? false;
+        rowMatches = row.status === selectedSafetyStatus || childStatusMatches;
+      }
+
       if (rowMatches || hasMatchingChildren) {
         let filteredChildren = row.children;
         
@@ -756,6 +807,10 @@ export default function App() {
         
         if (selectedRiskType) {
           filteredChildren = filteredChildren?.filter(child => !child.type || child.type === selectedRiskType);
+        }
+
+        if (selectedSafetyStatus) {
+          filteredChildren = filteredChildren?.filter(child => !child.status || child.status === selectedSafetyStatus);
         }
 
         return {
@@ -863,7 +918,12 @@ export default function App() {
                       className="w-[100px] h-[60px] object-cover rounded-lg shrink-0 mt-1"
                     />
                     <div className="flex-1">
-                      <h2 className="font-semibold text-text-title" style={{ fontSize: '22px' }}>{currentWorkplace.name}</h2>
+                      <div className="flex items-center gap-2">
+                        <h2 className="font-semibold text-text-title" style={{ fontSize: '22px' }}>{currentWorkplace.name}</h2>
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-600">
+                          红灯
+                        </span>
+                      </div>
                       
                       <div className="flex flex-wrap items-center gap-y-2 mt-3">
                         <div className="text-text-caption text-sm">
@@ -956,15 +1016,15 @@ export default function App() {
                         {SAFETY_RISK_TYPES.slice(0, 2).map((riskType, index) => {
                           const calibration = manualCalibrations[riskType.id];
                           const indicators = calibration ? calibration.calibratedIndicators : riskType.indicators;
-                          const redIndicatorCount = indicators.filter(ind => ind.status === 'red').length;
+                          const rectificationCount = getRectificationCountForRiskType(riskType.name);
                           return (
                             <div key={riskType.id} className="rounded-xl overflow-hidden hover:opacity-90 transition-opacity border flex flex-col" style={{ borderColor: '#DEE0E3', borderWidth: '0.5px', minHeight: '160px' }}>
                               <div className="py-2 px-3">
                                 <div className="flex items-center gap-2">
                                   <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="4" cy="4" r="4" fill="#E22E28"/>
+                                    <circle cx="4" cy="4" r="4" fill={index === 1 ? '#FF811A' : '#E22E28'}/>
                                   </svg>
-                                  <span className="text-sm font-semibold text-red-600">
+                                  <span className="text-sm font-semibold text-text-title">
                                     {riskType.name}{index === 0 && '（人工校准）'}
                                   </span>
                                 </div>
@@ -977,24 +1037,19 @@ export default function App() {
                                         <span className="text-text-caption flex-1">{indicator.label}</span>
                                         <div className="flex items-center gap-2" style={{ paddingLeft: 0, paddingRight: 0, width: '100px' }}>
                                           {indicator.status === 'green' ? (
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-tag-green-text">
-                                              <circle cx="12" cy="12" r="10"></circle>
-                                              <path d="m9 12 2 2 4-4"></path>
+                                            <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                              <circle cx="4" cy="4" r="4" fill="#32A645"/>
                                             </svg>
                                           ) : indicator.status === 'red' ? (
-                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                              <path d="M6.42188 1.41699C6.66252 1.00087 7.2406 0.974752 7.52344 1.33887L7.57617 1.41699L13.1299 11.3281L13.1748 11.418C13.3494 11.8453 13.0369 12.334 12.5557 12.334H1.44141C0.960349 12.3337 0.648549 11.8452 0.823242 11.418L0.864258 11.334L0.867188 11.3281L6.42188 1.41699Z" stroke="#E22E28"/>
-                                              <path d="M6.32812 5.03425C6.32812 4.812 6.50829 4.63184 6.73054 4.63184H7.26709C7.48934 4.63184 7.66951 4.812 7.66951 5.03425V8.25357C7.66951 8.47582 7.48934 8.65598 7.26709 8.65598H6.73054C6.50829 8.65598 6.32812 8.47582 6.32812 8.25357V5.03425Z" fill="#E22E28"/>
-                                              <path d="M6.32812 9.59495C6.32812 9.3727 6.50829 9.19254 6.73054 9.19254H7.26709C7.48934 9.19254 7.66951 9.3727 7.66951 9.59495V10.1315C7.66951 10.3538 7.48934 10.5339 7.26709 10.5339H6.73054C6.50829 10.5339 6.32812 10.3538 6.32812 10.1315V9.59495Z" fill="#E22E28"/>
+                                            <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                              <circle cx="4" cy="4" r="4" fill={index === 1 ? '#FF811A' : '#E22E28'}/>
                                             </svg>
                                           ) : (
-                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                              <path d="M6.42188 1.41699C6.66252 1.00087 7.2406 0.974752 7.52344 1.33887L7.57617 1.41699L13.1299 11.3281L13.1748 11.418C13.3494 11.8453 13.0369 12.334 12.5557 12.334H1.44141C0.960349 12.3337 0.648549 11.8452 0.823242 11.418L0.864258 11.334L0.867188 11.3281L6.42188 1.41699Z" stroke="#E22E28"/>
-                                              <path d="M6.32812 5.03425C6.32812 4.812 6.50829 4.63184 6.73054 4.63184H7.26709C7.48934 4.63184 7.66951 4.812 7.66951 5.03425V8.25357C7.66951 8.47582 7.48934 8.65598 7.26709 8.65598H6.73054C6.50829 8.65598 6.32812 8.47582 6.32812 8.25357V5.03425Z" fill="#E22E28"/>
-                                              <path d="M6.32812 9.59495C6.32812 9.3727 6.50829 9.19254 6.73054 9.19254H7.26709C7.48934 9.19254 7.66951 9.3727 7.66951 9.59495V10.1315C7.66951 10.3538 7.48934 10.5339 7.26709 10.5339H6.73054C6.50829 10.5339 6.32812 10.3538 6.32812 10.1315V9.59495Z" fill="#E22E28"/>
+                                            <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                              <circle cx="4" cy="4" r="4" fill="#E8921C"/>
                                             </svg>
                                           )}
-                                          <span className={indicator.status === 'green' ? 'text-tag-green-text font-medium' : indicator.status === 'orange' ? 'font-medium' : 'text-red-600 font-medium'} style={{ color: indicator.status === 'orange' ? '#E22E28' : undefined }}>
+                                          <span className="text-text-body font-medium">
                                             {indicator.value}
                                           </span>
                                         </div>
@@ -1004,15 +1059,20 @@ export default function App() {
                                 </div>
                               </div>
                               {(index === 0 || index === 2) && (
-                                <div className="bg-[#f8f9fa] p-3" style={{ borderRadius: '8px', marginBottom: '12px' }}>
+                                <div className="bg-[#f8f9fa] p-3" style={{ borderRadius: '8px', marginBottom: '12px', marginLeft: '12px', marginRight: '12px' }}>
                                   <p className="text-xs text-text-caption">
                                     校准原因：近期地铁改造,导致出入口人流激增,高峰期尾随情况加剧,但保安无法逐一甄别。
                                   </p>
                                 </div>
                               )}
                               <div className="bg-white p-3 border-t flex items-center justify-between mt-auto" style={{ borderColor: '#f3f4f6' }}>
-                                <span className="text-xs text-text-caption">{redIndicatorCount} 项整改任务</span>
-                                <button className="text-xs text-primary hover:underline font-medium">查看</button>
+                                <span className="text-xs text-text-caption">{rectificationCount} 项整改任务</span>
+                                <button 
+                                  className="text-xs text-primary hover:underline font-medium"
+                                  onClick={() => handleViewRectification(riskType.name)}
+                                >
+                                  查看
+                                </button>
                               </div>
                             </div>
                           );
@@ -1051,6 +1111,9 @@ export default function App() {
                                 <div className="flex items-center">
                                   <div className="flex flex-col gap-1">
                                       <div className="flex items-center gap-2">
+                                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                          <circle cx="4" cy="4" r="4" fill="#32A645"/>
+                                        </svg>
                                         <span className="text-sm font-medium text-text-title">
                                           {riskType.name}{calibration && '（人工校准）'}
                                         </span>
@@ -1060,26 +1123,23 @@ export default function App() {
                                 
                                 <div className="mt-3 flex flex-col gap-2">
                                   {indicators.map((indicator, idx) => {
-                                    const statusColor = indicator.status === 'green' ? 'text-tag-green-text' : indicator.status === 'orange' ? 'text-tag-orange-text' : 'text-red-600';
                                     const StatusIcon = indicator.status === 'green' ? CheckCircle2 : (indicator.status === 'orange' ? AlertCircle : null);
                                     return (
                                       <div key={idx} className="flex items-center text-xs gap-4 pr-3" style={{ paddingLeft: 0, paddingRight: 0 }}>
                                         <span className="text-text-caption flex-1">{indicator.label}</span>
                                         <div className="flex items-center gap-1.5">
-                                          <span className={`${statusColor} font-medium flex items-center gap-1.5`} style={{ width: '100px' }}>
+                                          <span className="text-text-body font-medium flex items-center gap-1.5" style={{ width: '100px' }}>
                                             {indicator.status === 'green' ? (
-                                              <CheckCircle2 size={14} />
+                                              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="4" cy="4" r="4" fill="#32A645"/>
+                                              </svg>
                                             ) : indicator.status === 'red' ? (
-                                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M6.42188 1.41699C6.66252 1.00087 7.2406 0.974752 7.52344 1.33887L7.57617 1.41699L13.1299 11.3281L13.1748 11.418C13.3494 11.8453 13.0369 12.334 12.5557 12.334H1.44141C0.960349 12.3337 0.648549 11.8452 0.823242 11.418L0.864258 11.334L0.867188 11.3281L6.42188 1.41699Z" stroke="#E22E28"/>
-                                                <path d="M6.32812 5.03425C6.32812 4.812 6.50829 4.63184 6.73054 4.63184H7.26709C7.48934 4.63184 7.66951 4.812 7.66951 5.03425V8.25357C7.66951 8.47582 7.48934 8.65598 7.26709 8.65598H6.73054C6.50829 8.65598 6.32812 8.47582 6.32812 8.25357V5.03425Z" fill="#E22E28"/>
-                                                <path d="M6.32812 9.59495C6.32812 9.3727 6.50829 9.19254 6.73054 9.19254H7.26709C7.48934 9.19254 7.66951 9.3727 7.66951 9.59495V10.1315C7.66951 10.3538 7.48934 10.5339 7.26709 10.5339H6.73054C6.50829 10.5339 6.32812 10.3538 6.32812 10.1315V9.59495Z" fill="#E22E28"/>
+                                              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="4" cy="4" r="4" fill="#E22E28"/>
                                               </svg>
                                             ) : (
-                                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M6.42188 1.41699C6.66252 1.00087 7.2406 0.974752 7.52344 1.33887L7.57617 1.41699L13.1299 11.3281L13.1748 11.418C13.3494 11.8453 13.0369 12.334 12.5557 12.334H1.44141C0.960349 12.3337 0.648549 11.8452 0.823242 11.418L0.864258 11.334L0.867188 11.3281L6.42188 1.41699Z" stroke="#E22E28"/>
-                                                <path d="M6.32812 5.03425C6.32812 4.812 6.50829 4.63184 6.73054 4.63184H7.26709C7.48934 4.63184 7.66951 4.812 7.66951 5.03425V8.25357C7.66951 8.47582 7.48934 8.65598 7.26709 8.65598H6.73054C6.50829 8.65598 6.32812 8.47582 6.32812 8.25357V5.03425Z" fill="#E22E28"/>
-                                                <path d="M6.32812 9.59495C6.32812 9.3727 6.50829 9.19254 6.73054 9.19254H7.26709C7.48934 9.19254 7.66951 9.3727 7.66951 9.59495V10.1315C7.66951 10.3538 7.48934 10.5339 7.26709 10.5339H6.73054C6.50829 10.5339 6.32812 10.3538 6.32812 10.1315V9.59495Z" fill="#E22E28"/>
+                                              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="4" cy="4" r="4" fill="#E8921C"/>
                                               </svg>
                                             )}
                                             {indicator.value}
@@ -1105,7 +1165,6 @@ export default function App() {
                 <section id="card-rectification" ref={rectificationRef} className="bg-bg-overlay rounded-xl border border-divider-light overflow-hidden">
                   <div className="pt-4 px-4 pb-0">
                     <h3 className="text-base font-medium text-text-title">整改任务</h3>
-                    <p className="text-sm text-text-body mt-1">整改计划完成时间：{getLatestPlanDate()}</p>
                   </div>
                   {/* Status Tabs and Table Container */}
                   <div className="mx-4 mt-4 mb-4">
@@ -1170,6 +1229,8 @@ export default function App() {
                       </button>
                     </div>
 
+
+
                     {/* Table */}
                     <div className="mt-4 pb-4">
                       <div className="overflow-x-auto">
@@ -1177,7 +1238,7 @@ export default function App() {
                         <thead>
                           <tr className="border-b border-divider">
                             <th className="px-4 py-3 text-left text-xs font-semibold text-text-caption uppercase tracking-wider">任务名称</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-text-caption uppercase tracking-wider" style={{ maxWidth: '200px' }}>归因分析</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-text-caption uppercase tracking-wider">整改前安全状态</th>
                             <th className="px-4 py-3 text-left text-xs font-semibold text-text-caption uppercase tracking-wider" style={{ maxWidth: '200px' }}>整改方案</th>
                             <th className="px-4 py-3 text-left text-xs font-semibold text-text-caption uppercase tracking-wider">整改状态</th>
                             <th className="px-4 py-3 text-left text-xs font-semibold text-text-caption uppercase tracking-wider">整改责任人</th>
@@ -1205,7 +1266,9 @@ export default function App() {
                                     </button>
                                   </div>
                                 </td>
-                                <td className="px-4 py-3 text-sm text-text-body" style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.analysis}</td>
+                                <td className="px-4 py-3 text-sm text-text-body">
+                                  <SafetyStatusBadge status={row.status} />
+                                </td>
                                 <td className="px-4 py-3 text-sm text-text-body" style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}></td>
                                 <td className="px-4 py-3 text-sm text-text-body">
                                   {row.originalChildren && row.originalChildren.length > 0 ? (
@@ -1235,7 +1298,7 @@ export default function App() {
                                         {child.ticketNumber}
                                       </button>
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-text-body" style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{child.analysis}</td>
+                                    <td className="px-4 py-3 text-sm text-text-body"></td>
                                     <td className="px-4 py-3 text-sm text-text-body" style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{child.solution}</td>
                                     <td className="px-4 py-3 text-sm text-text-body"><StatusBadge type={child.progress} /></td>
                                     <td className="px-4 py-3 text-sm text-text-body">
@@ -1456,98 +1519,58 @@ export default function App() {
                     <div>
                       <h4 className="text-sm font-bold text-text-title mb-4">应急资源</h4>
                       
-                      <div className="mb-6">
-                        <h5 className="text-sm font-medium text-text-title mb-3">周边消防队</h5>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                          {officeInfo.emergencyResources.fireStations.map(station => (
-                            <div key={station.id} className="border border-divider-light rounded-lg overflow-hidden">
-                              <div className="bg-bg-content-base px-3 py-3 border-b border-divider-light">
-                                <h6 className="text-sm font-bold text-text-title">{station.name}</h6>
+                      {[
+                        { key: 'fireStations', label: '周边消防队', data: officeInfo.emergencyResources.fireStations },
+                        { key: 'hospitals', label: '周边医院', data: officeInfo.emergencyResources.hospitals.slice(0, 3) },
+                        { key: 'policeStations', label: '周边派出所', data: officeInfo.emergencyResources.policeStations.slice(0, 2) }
+                      ].map(({ key, label, data }) => {
+                        const isExpanded = expandedEmergencyTypes.includes(key);
+                        return (
+                          <div key={key} className="mb-4">
+                            <button
+                              onClick={() => setExpandedEmergencyTypes(prev => 
+                                prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+                              )}
+                              className="w-full flex items-center justify-between p-3 bg-bg-content-base rounded-lg hover:bg-bg-overlay transition-colors"
+                            >
+                              <span className="text-sm font-medium text-text-title">{label}</span>
+                              <ChevronDown 
+                                size={16} 
+                                className={`text-text-body transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                              />
+                            </button>
+                            {isExpanded && (
+                              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                {data.map(item => (
+                                  <div key={item.id} className="border border-divider-light rounded-lg overflow-hidden">
+                                    <div className="bg-bg-content-base px-3 py-3 border-b border-divider-light">
+                                      <h6 className="text-sm font-bold text-text-title">{item.name}</h6>
+                                    </div>
+                                    <div className="p-3 space-y-2">
+                                      <div className="flex items-start gap-2">
+                                        <span className="text-sm text-text-caption shrink-0">距离：</span>
+                                        <span className="text-sm text-text-body">{item.distance} km</span>
+                                      </div>
+                                      <div className="flex items-start gap-2">
+                                        <span className="text-sm text-text-caption shrink-0">地址：</span>
+                                        <span className="text-sm text-text-body">{item.address}</span>
+                                      </div>
+                                      <div className="flex items-start gap-2">
+                                        <span className="text-sm text-text-caption shrink-0">电话：</span>
+                                        <span className="text-sm text-text-body">{item.phone}</span>
+                                      </div>
+                                      <div className="flex items-start gap-2">
+                                        <span className="text-sm text-text-caption shrink-0">车程：</span>
+                                        <span className="text-sm text-text-body">预估车程 {item.driveTime} 分钟</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                              <div className="p-3 space-y-2">
-                                <div className="flex items-start gap-2">
-                                  <span className="text-sm text-text-caption shrink-0">距离：</span>
-                                  <span className="text-sm text-text-body">{station.distance} km</span>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                  <span className="text-sm text-text-caption shrink-0">地址：</span>
-                                  <span className="text-sm text-text-body">{station.address}</span>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                  <span className="text-sm text-text-caption shrink-0">电话：</span>
-                                  <span className="text-sm text-text-body">{station.phone}</span>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                  <span className="text-sm text-text-caption shrink-0">车程：</span>
-                                  <span className="text-sm text-text-body">预估车程 {station.driveTime} 分钟</span>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="mb-6">
-                        <h5 className="text-sm font-medium text-text-title mb-3">周边医院</h5>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                          {officeInfo.emergencyResources.hospitals.slice(0, 3).map(hospital => (
-                            <div key={hospital.id} className="border border-divider-light rounded-lg overflow-hidden">
-                              <div className="bg-bg-content-base px-3 py-3 border-b border-divider-light">
-                                <h6 className="text-sm font-bold text-text-title">{hospital.name}</h6>
-                              </div>
-                              <div className="p-3 space-y-2">
-                                <div className="flex items-start gap-2">
-                                  <span className="text-sm text-text-caption shrink-0">距离：</span>
-                                  <span className="text-sm text-text-body">{hospital.distance} km</span>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                  <span className="text-sm text-text-caption shrink-0">地址：</span>
-                                  <span className="text-sm text-text-body">{hospital.address}</span>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                  <span className="text-sm text-text-caption shrink-0">电话：</span>
-                                  <span className="text-sm text-text-body">{hospital.phone}</span>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                  <span className="text-sm text-text-caption shrink-0">车程：</span>
-                                  <span className="text-sm text-text-body">预估车程 {hospital.driveTime} 分钟</span>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <h5 className="text-sm font-medium text-text-title mb-3">周边派出所</h5>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                          {officeInfo.emergencyResources.policeStations.slice(0, 2).map(station => (
-                            <div key={station.id} className="border border-divider-light rounded-lg overflow-hidden">
-                              <div className="bg-bg-content-base px-3 py-3 border-b border-divider-light">
-                                <h6 className="text-sm font-bold text-text-title">{station.name}</h6>
-                              </div>
-                              <div className="p-3 space-y-2">
-                                <div className="flex items-start gap-2">
-                                  <span className="text-sm text-text-caption shrink-0">距离：</span>
-                                  <span className="text-sm text-text-body">{station.distance} km</span>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                  <span className="text-sm text-text-caption shrink-0">地址：</span>
-                                  <span className="text-sm text-text-body">{station.address}</span>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                  <span className="text-sm text-text-caption shrink-0">电话：</span>
-                                  <span className="text-sm text-text-body">{station.phone}</span>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                  <span className="text-sm text-text-caption shrink-0">车程：</span>
-                                  <span className="text-sm text-text-body">预估车程 {station.driveTime} 分钟</span>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </section>
