@@ -11,6 +11,7 @@ import { StatusBadge, SafetyStatusBadge, getAggregatedProgress } from '../compon
 import { WORKPLACES } from '../mocks/workplaces';
 import { SAFETY_RISK_TYPES, RISK_TABS, RISK_TYPE_TO_RECTIFICATION_MAP, INITIAL_RISK_ASSESSMENT_DATA, INITIAL_OFFICE_INFO } from '../mocks/safetyData';
 import { RECTIFICATION_DATA } from '../mocks/rectificationData';
+import RiskCalibrationModal from '../components/RiskCalibrationModal';
 
 
 
@@ -1463,186 +1464,38 @@ export default function WorkplaceDetail() {
           )}
         </AnimatePresence>
 
-        {/* Calibration Drawer */}
-        <AnimatePresence>
-          {isCalibrationDrawerOpen && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsCalibrationDrawerOpen(false)}
-                className="fixed inset-0 bg-black/50 z-50"
-              />
-              <motion.div
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed right-0 top-0 h-full w-full sm:w-[600px] bg-bg-overlay z-50 shadow-xl flex flex-col"
-              >
-                <div className="flex items-center justify-between p-4 border-b border-divider-light">
-                  <h2 className="text-lg font-bold text-text-title">安全状态校准</h2>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setIsCalibrationDrawerOpen(false)}
-                      className="px-4 py-2 text-sm text-text-body hover:text-text-title transition-colors"
-                    >
-                      取消
-                    </button>
-                    <button
-                      onClick={saveCalibration}
-                      className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-                    >
-                      保存
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-4">
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 gap-3">
-                      {SAFETY_RISK_TYPES.map((riskType) => {
-                        const currentCalibration = manualCalibrations[riskType.id];
-                        const status = calibratingStatusByType[riskType.id] || 'green';
-                        const originalStatus = originalStatusByType[riskType.id] || 'green';
-                        const reason = calibratingReasonByType[riskType.id] || '';
-                        const indicators = calibratingIndicatorsByType[riskType.id] || [];
-                        const hasStatusChanged = status !== originalStatus;
-                        
-                        const statusColor = status === 'red' ? '#E22E28' : status === 'orange' ? '#E8921C' : '#34A853';
-                        const cardBgColor = status === 'red' ? 'bg-red-50' : status === 'orange' ? 'bg-yellow-50' : 'bg-green-50';
-                        const titleColor = status === 'red' ? 'text-red-600' : status === 'orange' ? 'text-yellow-600' : 'text-text-title';
-                        
-                        return (
-                          <div key={riskType.id} className="rounded-xl overflow-hidden transition-opacity border" style={{ borderColor: '#DEE0E3', borderWidth: '0.5px' }}>
-                            {currentCalibration && (
-                              <div className="bg-tag-green-bg/30 border-b border-tag-green-bg p-2">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <span className="inline-flex items-center px-2 py-0.5 bg-tag-green-bg text-tag-green-text text-xs rounded-full">
-                                      人工校准
-                                    </span>
-                                    <span className="text-xs text-text-caption">校准时间：{currentCalibration.calibratedAt}</span>
-                                  </div>
-                                  <button
-                                    onClick={() => deleteCalibration(riskType.id)}
-                                    className="text-xs text-red-500 hover:text-red-600 transition-colors"
-                                  >
-                                    删除
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                            <div className={currentCalibration ? 'py-2 px-3' : 'py-2 px-3'}>
-                              <div className="flex items-center gap-2 mb-2">
-                                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <circle cx="4" cy="4" r="4" fill={statusColor}/>
-                                </svg>
-                                <span className={`text-sm font-semibold ${titleColor}`}>
-                                  {riskType.name}{currentCalibration && '（人工校准）'}
-                                </span>
-                              </div>
-                              
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={() => updateRiskTypeStatus(riskType.id, 'green')}
-                                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                                      status === 'green'
-                                        ? 'bg-green-500 text-white'
-                                        : 'bg-white border border-gray-200 text-text-body hover:border-green-500 hover:text-green-500'
-                                    }`}
-                                  >
-                                    绿灯
-                                  </button>
-                                  <button
-                                    onClick={() => updateRiskTypeStatus(riskType.id, 'orange')}
-                                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                                      status === 'orange'
-                                        ? 'bg-yellow-500 text-white'
-                                        : 'bg-white border border-gray-200 text-text-body hover:border-yellow-500 hover:text-yellow-500'
-                                    }`}
-                                  >
-                                    黄灯
-                                  </button>
-                                  <button
-                                    onClick={() => updateRiskTypeStatus(riskType.id, 'red')}
-                                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                                      status === 'red'
-                                        ? 'bg-red-500 text-white'
-                                        : 'bg-white border border-gray-200 text-text-body hover:border-red-500 hover:text-red-500'
-                                    }`}
-                                  >
-                                    红灯
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="bg-white p-3 pr-3">
-                              {(hasStatusChanged || currentCalibration) && (
-                                <div className="mb-3">
-                                  <label className="text-xs font-medium text-text-title mb-1 block">校准理由</label>
-                                  <textarea
-                                    value={reason}
-                                    onChange={(e) => updateCalibrationReason(riskType.id, e.target.value)}
-                                    className="w-full px-2 py-1.5 border border-divider-light rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-                                    placeholder="请输入校准理由..."
-                                    rows={2}
-                                  />
-                                </div>
-                              )}
-                              {currentCalibration && currentCalibration.calibratedReason && (
-                                <div className="mb-3 p-2 bg-tag-green-bg/20 rounded-lg">
-                                  <p className="text-xs text-text-caption">
-                                    <span className="font-medium text-tag-green-text">已保存的理由：</span>
-                                    {currentCalibration.calibratedReason}
-                                  </p>
-                                </div>
-                              )}
-                              <div className="flex flex-col gap-2">
-                                {indicators.map((indicator, idx) => {
-                                  return (
-                                    <div key={idx} className="flex items-center text-xs gap-4 pr-3" style={{ paddingLeft: 0, paddingRight: 0 }}>
-                                      <span className="text-text-caption flex-1">{indicator.label}</span>
-                                      <div className="flex items-center gap-2" style={{ paddingLeft: 0, paddingRight: 0, width: '80px' }}>
-                                        {indicator.status === 'green' ? (
-                                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-tag-green-text">
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <path d="m9 12 2 2 4-4"></path>
-                                          </svg>
-                                        ) : indicator.status === 'red' ? (
-                                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M6.42188 1.41699C6.66252 1.00087 7.2406 0.974752 7.52344 1.33887L7.57617 1.41699L13.1299 11.3281L13.1748 11.418C13.3494 11.8453 13.0369 12.334 12.5557 12.334H1.44141C0.960349 12.3337 0.648549 11.8452 0.823242 11.418L0.864258 11.334L0.867188 11.3281L6.42188 1.41699Z" stroke="#E22E28"/>
-                                            <path d="M6.32812 5.03425C6.32812 4.812 6.50829 4.63184 6.73054 4.63184H7.26709C7.48934 4.63184 7.66951 4.812 7.66951 5.03425V8.25357C7.66951 8.47582 7.48934 8.65598 7.26709 8.65598H6.73054C6.50829 8.65598 6.32812 8.47582 6.32812 8.25357V5.03425Z" fill="#E22E28"/>
-                                            <path d="M6.32812 9.59495C6.32812 9.3727 6.50829 9.19254 6.73054 9.19254H7.26709C7.48934 9.19254 7.66951 9.3727 7.66951 9.59495V10.1315C7.66951 10.3538 7.48934 10.5339 7.26709 10.5339H6.73054C6.50829 10.5339 6.32812 10.3538 6.32812 10.1315V9.59495Z" fill="#E22E28"/>
-                                          </svg>
-                                        ) : (
-                                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M6.42188 1.41699C6.66252 1.00087 7.2406 0.974752 7.52344 1.33887L7.57617 1.41699L13.1299 11.3281L13.1748 11.418C13.3494 11.8453 13.0369 12.334 12.5557 12.334H1.44141C0.960349 12.3337 0.648549 11.8452 0.823242 11.418L0.864258 11.334L0.867188 11.3281L6.42188 1.41699Z" stroke="#E22E28"/>
-                                            <path d="M6.32812 5.03425C6.32812 4.812 6.50829 4.63184 6.73054 4.63184H7.26709C7.48934 4.63184 7.66951 4.812 7.66951 5.03425V8.25357C7.66951 8.47582 7.48934 8.65598 7.26709 8.65598H6.73054C6.50829 8.65598 6.32812 8.47582 6.32812 8.25357V5.03425Z" fill="#E22E28"/>
-                                            <path d="M6.32812 9.59495C6.32812 9.3727 6.50829 9.19254 6.73054 9.19254H7.26709C7.48934 9.19254 7.66951 9.3727 7.66951 9.59495V10.1315C7.66951 10.3538 7.48934 10.5339 7.26709 10.5339H6.73054C6.50829 10.5339 6.32812 10.3538 6.32812 10.1315V9.59495Z" fill="#E22E28"/>
-                                          </svg>
-                                        )}
-                                        <span className={indicator.status === 'green' ? 'text-text-title font-medium' : indicator.status === 'orange' ? 'font-medium' : 'text-red-600 font-medium'} style={{ color: indicator.status === 'orange' ? '#E22E28' : undefined }}>
-                                          {indicator.value}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
+        {/* Risk Calibration Modal */}
+        <RiskCalibrationModal
+          visible={isCalibrationDrawerOpen}
+          onClose={() => setIsCalibrationDrawerOpen(false)}
+          riskTypes={SAFETY_RISK_TYPES}
+          manualCalibrations={manualCalibrations}
+          onSaveCalibration={(riskTypeId, targetStatus, reason) => {
+            const riskType = SAFETY_RISK_TYPES.find((r) => r.id === riskTypeId);
+            if (!riskType) return;
+            const calibratedAt = new Date().toLocaleString('zh-CN', {
+              year: 'numeric', month: '2-digit', day: '2-digit',
+              hour: '2-digit', minute: '2-digit',
+            }).replace(/\//g, '-');
+            setManualCalibrations((prev) => ({
+              ...prev,
+              [riskTypeId]: {
+                riskTypeId,
+                calibratedStatus: targetStatus,
+                calibratedIndicators: [...riskType.indicators],
+                calibratedReason: reason,
+                calibratedAt,
+              },
+            }));
+          }}
+          onDeleteCalibration={(riskTypeId) => {
+            setManualCalibrations((prev) => {
+              const next = { ...prev };
+              delete next[riskTypeId];
+              return next;
+            });
+          }}
+        />
 
         {/* Office Info Drawer */}
         <AnimatePresence>
