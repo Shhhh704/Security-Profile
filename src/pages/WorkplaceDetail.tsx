@@ -1,14 +1,8 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Tag, Notice, Input, Tooltip } from '@universe-design/react';
+import { Button, Tag } from '@universe-design/react';
 import { Users, ChevronRight, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import ReportFilled from '@universe-design/icons-react/ReportFilled';
-import YesFilled from '@universe-design/icons-react/YesFilled';
-import CloseOutlined from '@universe-design/icons-react/CloseOutlined';
-import LeftOutlined from '@universe-design/icons-react/LeftOutlined';
-import AddOutlined from '@universe-design/icons-react/AddOutlined';
-import InfoOutlined from '@universe-design/icons-react/InfoOutlined';
 import type {
   TabType, WorkplaceInfo, RectificationItem, RiskAssessmentData,
   SafetyIndicator, ManualCalibration, OfficeInfo, EmergencyResource, EmergencyResources,
@@ -287,34 +281,6 @@ export default function WorkplaceDetail() {
       [riskTypeId]: reason
     }));
   };
-
-  const [calibratingRiskTypeId, setCalibratingRiskTypeId] = useState<string | null>(null);
-
-  const [calibrationFormRiskId, setCalibrationFormRiskId] = useState<string | null>(null);
-  const [calibrationFormLevel, setCalibrationFormLevel] = useState<'green' | 'orange' | 'red' | null>(null);
-  const [calibrationFormReason, setCalibrationFormReason] = useState('');
-
-  const getRiskTypeComputedStatus = (riskType: typeof SAFETY_RISK_TYPES[0]): 'red' | 'orange' | 'green' => {
-    const calibration = manualCalibrations[riskType.id];
-    if (calibration) return calibration.calibratedStatus;
-    const hasRed = riskType.indicators.some(i => i.status === 'red');
-    const hasOrange = riskType.indicators.some(i => i.status === 'orange');
-    return hasRed ? 'red' : hasOrange ? 'orange' : 'green';
-  };
-
-  const groupedRiskTypes = useMemo(() => {
-    const abnormal: typeof SAFETY_RISK_TYPES = [];
-    const stable: typeof SAFETY_RISK_TYPES = [];
-    SAFETY_RISK_TYPES.forEach(rt => {
-      const status = getRiskTypeComputedStatus(rt);
-      if (status === 'red' || status === 'orange') {
-        abnormal.push(rt);
-      } else {
-        stable.push(rt);
-      }
-    });
-    return { abnormal, stable };
-  }, [manualCalibrations]);
 
   const updateIndicatorStatus = (riskTypeId: string, index: number, status: 'green' | 'orange' | 'red') => {
     setCalibratingIndicatorsByType(prev => ({
@@ -635,11 +601,6 @@ export default function WorkplaceDetail() {
                             <path d="M11.4435 1.66707C10.802 0.555963 9.1982 0.555962 8.5567 1.66707L0.618234 15.8337C-0.0232666 16.9448 0.778607 18.3337 2.06161 18.3337H17.9387C19.2217 18.3337 20.0236 16.9448 19.3821 15.8337L11.4435 1.66707ZM8.95833 6.875C8.95833 6.52982 9.23816 6.25 9.58333 6.25H10.4167C10.7618 6.25 11.0417 6.52982 11.0417 6.875V11.875C11.0417 12.2202 10.7618 12.5 10.4167 12.5H9.58333C9.23816 12.5 8.95833 12.2202 8.95833 11.875V6.875ZM8.95833 13.9583C8.95833 13.6132 9.23816 13.3333 9.58333 13.3333H10.4167C10.7618 13.3333 11.0417 13.6132 11.0417 13.9583V14.7917C11.0417 15.1368 10.7618 15.4167 10.4167 15.4167H9.58333C9.23816 15.4167 8.95833 15.1368 8.95833 14.7917V13.9583Z" fill="#F54A45"/>
                           </svg>
                           <span className="text-lg text-red-600" style={{ marginLeft: '8px', lineHeight: '1', verticalAlign: 'middle', fontWeight: '700', fontSize: '16px' }}>2 项指标需关注</span>
-                          <Tooltip content="办公室安全等级以各项风险类型的最高风险为准" placement="top">
-                            <span style={{ marginLeft: '6px', color: '#8F959E', cursor: 'pointer', verticalAlign: 'middle', display: 'inline-flex' }}>
-                              <InfoOutlined style={{ fontSize: 16 }} />
-                            </span>
-                          </Tooltip>
                         </div>
                         <Button 
                           onClick={openCalibrationDrawer}
@@ -1502,7 +1463,7 @@ export default function WorkplaceDetail() {
           )}
         </AnimatePresence>
 
-        {/* Calibration Dialog */}
+        {/* Calibration Drawer */}
         <AnimatePresence>
           {isCalibrationDrawerOpen && (
             <>
@@ -1510,358 +1471,174 @@ export default function WorkplaceDetail() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => { setIsCalibrationDrawerOpen(false); setCalibrationFormRiskId(null); }}
-                className="fixed inset-0 bg-black/55 z-50"
+                onClick={() => setIsCalibrationDrawerOpen(false)}
+                className="fixed inset-0 bg-black/50 z-50"
               />
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[740px] max-h-[80vh] bg-white rounded-lg z-50 flex flex-col overflow-hidden"
-                style={{ boxShadow: '0px 6px 12px -10px rgba(31,35,41,0.06), 0px 8px 24px 0px rgba(31,35,41,0.04), 0px 10px 36px 10px rgba(31,35,41,0.04)' }}
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed right-0 top-0 h-full w-full sm:w-[600px] bg-bg-overlay z-50 shadow-xl flex flex-col"
               >
-                {calibrationFormRiskId ? (() => {
-                  const formRiskType = SAFETY_RISK_TYPES.find(rt => rt.id === calibrationFormRiskId)!;
-                  const formCalibration = manualCalibrations[calibrationFormRiskId];
-                  const formComputedStatus = getRiskTypeComputedStatus(formRiskType);
-                  const formStatusColor = formComputedStatus === 'red' ? '#F54A45' : formComputedStatus === 'orange' ? '#FF811A' : '#32A645';
-                  const formIndicators = formCalibration ? formCalibration.calibratedIndicators : formRiskType.indicators;
-                  const statusLabel = (s: string) => s === 'red' ? '红灯' : s === 'orange' ? '黄灯' : '绿灯';
-                  const statusBg = (s: string) => s === 'red' ? '#FFECE8' : s === 'orange' ? '#FFF3E5' : '#E8F5E9';
-                  const statusTextColor = (s: string) => s === 'red' ? '#E22E28' : s === 'orange' ? '#C25705' : '#258832';
-                  const higherLevels: ('orange' | 'red')[] = [];
-                  if (formComputedStatus === 'green') { higherLevels.push('orange', 'red'); }
-                  else if (formComputedStatus === 'orange') { higherLevels.push('red'); }
+                <div className="flex items-center justify-between p-4 border-b border-divider-light">
+                  <h2 className="text-lg font-bold text-text-title">安全状态校准</h2>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setIsCalibrationDrawerOpen(false)}
+                      className="px-4 py-2 text-sm text-text-body hover:text-text-title transition-colors"
+                    >
+                      取消
+                    </button>
+                    <button
+                      onClick={saveCalibration}
+                      className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                    >
+                      保存
+                    </button>
+                  </div>
+                </div>
 
-                  return (
-                    <>
-                      {/* Form Header */}
-                      <div className="flex items-center justify-between pl-6 pr-3 py-6">
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => setCalibrationFormRiskId(null)}
-                            className="p-1 rounded hover:bg-gray-100 transition-colors"
-                            style={{ color: '#646A73' }}
-                          >
-                            <LeftOutlined style={{ fontSize: 20 }} />
-                          </button>
-                          <p className="text-base font-medium" style={{ color: '#1F2329' }}>校准{formRiskType.name}</p>
-                        </div>
-                        <button
-                          onClick={() => { setIsCalibrationDrawerOpen(false); setCalibrationFormRiskId(null); }}
-                          className="p-1 rounded hover:bg-gray-100 transition-colors"
-                          style={{ color: '#646A73' }}
-                        >
-                          <CloseOutlined style={{ fontSize: 20 }} />
-                        </button>
-                      </div>
-
-                      {/* Form Body */}
-                      <div className="flex-1 overflow-y-auto px-6 flex flex-col gap-5">
-                        {/* Risk Card (read-only) */}
-                        <div className="bg-white border border-solid rounded-xl overflow-hidden p-3 flex flex-col gap-3" style={{ borderColor: '#DEE0E3', borderWidth: '0.5px' }}>
-                          <div className="flex items-center justify-between h-[22px]">
-                            <div className="flex items-center gap-2">
-                              <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><circle cx="4" cy="4" r="4" fill={formStatusColor}/></svg>
-                              <span className="text-sm font-medium" style={{ color: '#1F2329' }}>{formRiskType.name}</span>
-                            </div>
-                            {formCalibration && (
-                              <Button type="text" size="small" disabled>校准</Button>
-                            )}
-                          </div>
-                          <div className="w-full" style={{ height: '0.5px', background: '#DEE0E3' }} />
-                          <div className="flex justify-between">
-                            <div className="flex flex-col gap-1 text-xs" style={{ color: '#1F2329' }}>
-                              {formIndicators.map((ind, idx) => (
-                                <span key={idx} className="leading-5 whitespace-nowrap">{ind.label}</span>
-                              ))}
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              {formIndicators.map((ind, idx) => (
-                                <div key={idx} className="flex items-center gap-1 leading-5">
-                                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                                    <circle cx="4" cy="4" r="4" fill={ind.status === 'red' ? '#F54A45' : ind.status === 'orange' ? '#FF811A' : '#32A645'}/>
-                                  </svg>
-                                  <span className="text-xs whitespace-nowrap" style={{ color: '#1F2329' }}>{ind.value}</span>
+                <div className="flex-1 overflow-y-auto p-4">
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 gap-3">
+                      {SAFETY_RISK_TYPES.map((riskType) => {
+                        const currentCalibration = manualCalibrations[riskType.id];
+                        const status = calibratingStatusByType[riskType.id] || 'green';
+                        const originalStatus = originalStatusByType[riskType.id] || 'green';
+                        const reason = calibratingReasonByType[riskType.id] || '';
+                        const indicators = calibratingIndicatorsByType[riskType.id] || [];
+                        const hasStatusChanged = status !== originalStatus;
+                        
+                        const statusColor = status === 'red' ? '#E22E28' : status === 'orange' ? '#E8921C' : '#34A853';
+                        const cardBgColor = status === 'red' ? 'bg-red-50' : status === 'orange' ? 'bg-yellow-50' : 'bg-green-50';
+                        const titleColor = status === 'red' ? 'text-red-600' : status === 'orange' ? 'text-yellow-600' : 'text-text-title';
+                        
+                        return (
+                          <div key={riskType.id} className="rounded-xl overflow-hidden transition-opacity border" style={{ borderColor: '#DEE0E3', borderWidth: '0.5px' }}>
+                            {currentCalibration && (
+                              <div className="bg-tag-green-bg/30 border-b border-tag-green-bg p-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="inline-flex items-center px-2 py-0.5 bg-tag-green-bg text-tag-green-text text-xs rounded-full">
+                                      人工校准
+                                    </span>
+                                    <span className="text-xs text-text-caption">校准时间：{currentCalibration.calibratedAt}</span>
+                                  </div>
+                                  <button
+                                    onClick={() => deleteCalibration(riskType.id)}
+                                    className="text-xs text-red-500 hover:text-red-600 transition-colors"
+                                  >
+                                    删除
+                                  </button>
                                 </div>
-                              ))}
+                              </div>
+                            )}
+                            <div className={currentCalibration ? 'py-2 px-3' : 'py-2 px-3'}>
+                              <div className="flex items-center gap-2 mb-2">
+                                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <circle cx="4" cy="4" r="4" fill={statusColor}/>
+                                </svg>
+                                <span className={`text-sm font-semibold ${titleColor}`}>
+                                  {riskType.name}{currentCalibration && '（人工校准）'}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => updateRiskTypeStatus(riskType.id, 'green')}
+                                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                                      status === 'green'
+                                        ? 'bg-green-500 text-white'
+                                        : 'bg-white border border-gray-200 text-text-body hover:border-green-500 hover:text-green-500'
+                                    }`}
+                                  >
+                                    绿灯
+                                  </button>
+                                  <button
+                                    onClick={() => updateRiskTypeStatus(riskType.id, 'orange')}
+                                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                                      status === 'orange'
+                                        ? 'bg-yellow-500 text-white'
+                                        : 'bg-white border border-gray-200 text-text-body hover:border-yellow-500 hover:text-yellow-500'
+                                    }`}
+                                  >
+                                    黄灯
+                                  </button>
+                                  <button
+                                    onClick={() => updateRiskTypeStatus(riskType.id, 'red')}
+                                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                                      status === 'red'
+                                        ? 'bg-red-500 text-white'
+                                        : 'bg-white border border-gray-200 text-text-body hover:border-red-500 hover:text-red-500'
+                                    }`}
+                                  >
+                                    红灯
+                                  </button>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-
-                        {/* Current Status & Calibration Level */}
-                        <div className="flex gap-5">
-                          <div className="flex-1 flex flex-col gap-0.5">
-                            <div className="pb-1.5">
-                              <span className="text-sm" style={{ color: '#646A73' }}>当前状态</span>
-                            </div>
-                            <div
-                              className="flex items-center justify-center h-8 rounded-full w-14"
-                              style={{ background: statusBg(formComputedStatus) }}
-                            >
-                              <span className="text-sm" style={{ color: statusTextColor(formComputedStatus) }}>{statusLabel(formComputedStatus)}</span>
-                            </div>
-                          </div>
-                          <div className="flex-1 flex flex-col gap-0.5">
-                            <div className="pb-1.5">
-                              <span className="text-sm" style={{ color: '#646A73' }}>校准为</span>
-                              <span className="text-sm font-medium" style={{ color: '#E22E28' }}>*</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              {higherLevels.length > 0 ? higherLevels.map(level => (
-                                <button
-                                  key={level}
-                                  onClick={() => setCalibrationFormLevel(level)}
-                                  className="flex items-center justify-center h-8 rounded-full w-14 transition-all"
-                                  style={calibrationFormLevel === level
-                                    ? { background: statusBg(level), border: 'none' }
-                                    : { background: '#FFFFFF', border: '1px solid #D0D3D6' }
-                                  }
-                                >
-                                  <span className="text-sm" style={{ color: calibrationFormLevel === level ? statusTextColor(level) : '#646A73' }}>
-                                    {statusLabel(level)}
-                                  </span>
-                                </button>
-                              )) : (
-                                <span className="text-sm" style={{ color: '#8F959E' }}>已为最高等级</span>
+                            <div className="bg-white p-3 pr-3">
+                              {(hasStatusChanged || currentCalibration) && (
+                                <div className="mb-3">
+                                  <label className="text-xs font-medium text-text-title mb-1 block">校准理由</label>
+                                  <textarea
+                                    value={reason}
+                                    onChange={(e) => updateCalibrationReason(riskType.id, e.target.value)}
+                                    className="w-full px-2 py-1.5 border border-divider-light rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                                    placeholder="请输入校准理由..."
+                                    rows={2}
+                                  />
+                                </div>
                               )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Calibration Reason */}
-                        <div className="flex flex-col gap-0.5">
-                          <div className="pb-1.5">
-                            <span className="text-sm" style={{ color: '#646A73' }}>校准理由</span>
-                            <span className="text-sm font-medium" style={{ color: '#E22E28' }}>*</span>
-                          </div>
-                          <Input.TextArea
-                            value={calibrationFormReason}
-                            onChange={(e) => setCalibrationFormReason(e.target.value)}
-                            placeholder="近期地铁改造，导致出入口人流激增，高峰期尾随情况加剧，但保安无法逐一甄别"
-                            showCount
-                            maxLength={100}
-                            autoSize={{ minRows: 4, maxRows: 6 }}
-                          />
-                        </div>
-
-                        {/* Appendix */}
-                        <div className="flex flex-col gap-0.5">
-                          <div className="pb-1.5">
-                            <span className="text-sm" style={{ color: '#646A73' }}>附件</span>
-                          </div>
-                          <p className="text-sm" style={{ color: '#8F959E' }}>仅支持：JPG、PNG、PDF，文件大小不超过 10MB。</p>
-                          <div className="mt-2">
-                            <button
-                              className="flex items-center justify-center rounded-lg transition-colors hover:bg-gray-100"
-                              style={{ width: 48, height: 48, background: '#EFF0F1', color: '#8F959E' }}
-                            >
-                              <AddOutlined style={{ fontSize: 24 }} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Form Footer */}
-                      <div className="flex items-center justify-end gap-3 p-6" style={{ borderTop: '1px solid rgba(31,35,41,0.15)' }}>
-                        <Button type="outlined" size="medium" onClick={() => setCalibrationFormRiskId(null)}>
-                          取消
-                        </Button>
-                        <Button
-                          type="filled"
-                          size="medium"
-                          disabled={!calibrationFormLevel || !calibrationFormReason.trim()}
-                          onClick={() => {
-                            if (!calibrationFormLevel || !calibrationFormReason.trim()) return;
-                            const calibratedAt = new Date().toLocaleString('zh-CN', {
-                              year: 'numeric', month: '2-digit', day: '2-digit',
-                              hour: '2-digit', minute: '2-digit'
-                            }).replace(/\//g, '-');
-                            setManualCalibrations(prev => ({
-                              ...prev,
-                              [calibrationFormRiskId]: {
-                                riskTypeId: calibrationFormRiskId,
-                                calibratedStatus: calibrationFormLevel,
-                                calibratedIndicators: formCalibration ? formCalibration.calibratedIndicators : [...formRiskType.indicators],
-                                calibratedReason: calibrationFormReason.trim(),
-                                calibratedAt,
-                              }
-                            }));
-                            setCalibrationFormRiskId(null);
-                            setCalibrationFormLevel(null);
-                            setCalibrationFormReason('');
-                          }}
-                        >
-                          确认
-                        </Button>
-                      </div>
-                    </>
-                  );
-                })() : (
-                  <>
-                    {/* Overview Header */}
-                    <div className="flex items-start justify-between pt-6 pb-5 pl-6 pr-3">
-                      <p className="text-base font-medium" style={{ color: '#1F2329' }}>风险校准</p>
-                      <button
-                        onClick={() => { setIsCalibrationDrawerOpen(false); setCalibrationFormRiskId(null); }}
-                        className="p-1 rounded hover:bg-gray-100 transition-colors"
-                        style={{ color: '#646A73' }}
-                      >
-                        <CloseOutlined style={{ fontSize: 20 }} />
-                      </button>
-                    </div>
-
-                    {/* Overview Body */}
-                    <div className="flex-1 overflow-y-auto px-6 pb-2">
-                      <div className="flex flex-col gap-3">
-                        <div className="pb-2">
-                          <Notice type="info" showIcon align="center" message="仅支持将风险校准为更高风险等级，不可降级校准。" />
-                        </div>
-
-                        {/* 异常风险 */}
-                        {groupedRiskTypes.abnormal.length > 0 && (
-                          <>
-                            <div className="flex items-center gap-1.5">
-                              <ReportFilled style={{ color: '#F54A45', fontSize: 16 }} />
-                              <span className="text-sm font-medium" style={{ color: '#1F2329' }}>异常风险</span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              {groupedRiskTypes.abnormal.map((riskType) => {
-                                const currentCalibration = manualCalibrations[riskType.id];
-                                const computedStatus = getRiskTypeComputedStatus(riskType);
-                                const statusColor = computedStatus === 'red' ? '#F54A45' : computedStatus === 'orange' ? '#FF811A' : '#32A645';
-                                const indicators = currentCalibration ? currentCalibration.calibratedIndicators : riskType.indicators;
-                                return (
-                                  <div key={riskType.id} className="bg-white border border-solid rounded-xl overflow-hidden p-3 flex flex-col gap-2.5" style={{ borderColor: '#DEE0E3', borderWidth: '0.5px' }}>
-                                    <div className="flex items-center justify-between h-[22px]">
-                                      <div className="flex items-center gap-2">
-                                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><circle cx="4" cy="4" r="4" fill={statusColor}/></svg>
-                                        <span className="text-sm font-medium" style={{ color: '#1F2329' }}>{riskType.name}</span>
-                                        {currentCalibration && (
-                                          <span className="px-1.5 rounded text-xs leading-5" style={{ background: 'rgba(31,35,41,0.1)', color: '#1F2329' }}>人工校准</span>
+                              {currentCalibration && currentCalibration.calibratedReason && (
+                                <div className="mb-3 p-2 bg-tag-green-bg/20 rounded-lg">
+                                  <p className="text-xs text-text-caption">
+                                    <span className="font-medium text-tag-green-text">已保存的理由：</span>
+                                    {currentCalibration.calibratedReason}
+                                  </p>
+                                </div>
+                              )}
+                              <div className="flex flex-col gap-2">
+                                {indicators.map((indicator, idx) => {
+                                  return (
+                                    <div key={idx} className="flex items-center text-xs gap-4 pr-3" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                                      <span className="text-text-caption flex-1">{indicator.label}</span>
+                                      <div className="flex items-center gap-2" style={{ paddingLeft: 0, paddingRight: 0, width: '80px' }}>
+                                        {indicator.status === 'green' ? (
+                                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-tag-green-text">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <path d="m9 12 2 2 4-4"></path>
+                                          </svg>
+                                        ) : indicator.status === 'red' ? (
+                                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M6.42188 1.41699C6.66252 1.00087 7.2406 0.974752 7.52344 1.33887L7.57617 1.41699L13.1299 11.3281L13.1748 11.418C13.3494 11.8453 13.0369 12.334 12.5557 12.334H1.44141C0.960349 12.3337 0.648549 11.8452 0.823242 11.418L0.864258 11.334L0.867188 11.3281L6.42188 1.41699Z" stroke="#E22E28"/>
+                                            <path d="M6.32812 5.03425C6.32812 4.812 6.50829 4.63184 6.73054 4.63184H7.26709C7.48934 4.63184 7.66951 4.812 7.66951 5.03425V8.25357C7.66951 8.47582 7.48934 8.65598 7.26709 8.65598H6.73054C6.50829 8.65598 6.32812 8.47582 6.32812 8.25357V5.03425Z" fill="#E22E28"/>
+                                            <path d="M6.32812 9.59495C6.32812 9.3727 6.50829 9.19254 6.73054 9.19254H7.26709C7.48934 9.19254 7.66951 9.3727 7.66951 9.59495V10.1315C7.66951 10.3538 7.48934 10.5339 7.26709 10.5339H6.73054C6.50829 10.5339 6.32812 10.3538 6.32812 10.1315V9.59495Z" fill="#E22E28"/>
+                                          </svg>
+                                        ) : (
+                                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M6.42188 1.41699C6.66252 1.00087 7.2406 0.974752 7.52344 1.33887L7.57617 1.41699L13.1299 11.3281L13.1748 11.418C13.3494 11.8453 13.0369 12.334 12.5557 12.334H1.44141C0.960349 12.3337 0.648549 11.8452 0.823242 11.418L0.864258 11.334L0.867188 11.3281L6.42188 1.41699Z" stroke="#E22E28"/>
+                                            <path d="M6.32812 5.03425C6.32812 4.812 6.50829 4.63184 6.73054 4.63184H7.26709C7.48934 4.63184 7.66951 4.812 7.66951 5.03425V8.25357C7.66951 8.47582 7.48934 8.65598 7.26709 8.65598H6.73054C6.50829 8.65598 6.32812 8.47582 6.32812 8.25357V5.03425Z" fill="#E22E28"/>
+                                            <path d="M6.32812 9.59495C6.32812 9.3727 6.50829 9.19254 6.73054 9.19254H7.26709C7.48934 9.19254 7.66951 9.3727 7.66951 9.59495V10.1315C7.66951 10.3538 7.48934 10.5339 7.26709 10.5339H6.73054C6.50829 10.5339 6.32812 10.3538 6.32812 10.1315V9.59495Z" fill="#E22E28"/>
+                                          </svg>
                                         )}
-                                      </div>
-                                      {currentCalibration ? (
-                                        <Button type="text" size="small" onClick={() => {
-                                          setCalibrationFormRiskId(riskType.id);
-                                          setCalibrationFormLevel(currentCalibration.calibratedStatus);
-                                          setCalibrationFormReason(currentCalibration.calibratedReason || '');
-                                        }}>校准详情</Button>
-                                      ) : (
-                                        <Button type="text" size="small" onClick={() => {
-                                          setCalibrationFormRiskId(riskType.id);
-                                          setCalibrationFormLevel(null);
-                                          setCalibrationFormReason('');
-                                        }}>校准</Button>
-                                      )}
-                                    </div>
-                                    <div className="w-full" style={{ height: '0.5px', background: '#DEE0E3' }} />
-                                    <div className="flex justify-between">
-                                      <div className="flex flex-col gap-1 text-xs" style={{ color: '#1F2329' }}>
-                                        {indicators.map((ind, idx) => (
-                                          <span key={idx} className="leading-5 whitespace-nowrap">{ind.label}</span>
-                                        ))}
-                                      </div>
-                                      <div className="flex flex-col gap-1">
-                                        {indicators.map((ind, idx) => (
-                                          <div key={idx} className="flex items-center gap-1 leading-5">
-                                            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                                              <circle cx="4" cy="4" r="4" fill={ind.status === 'red' ? '#F54A45' : ind.status === 'orange' ? '#FF811A' : '#32A645'}/>
-                                            </svg>
-                                            <span className="text-xs whitespace-nowrap" style={{ color: '#1F2329' }}>{ind.value}</span>
-                                          </div>
-                                        ))}
+                                        <span className={indicator.status === 'green' ? 'text-text-title font-medium' : indicator.status === 'orange' ? 'font-medium' : 'text-red-600 font-medium'} style={{ color: indicator.status === 'orange' ? '#E22E28' : undefined }}>
+                                          {indicator.value}
+                                        </span>
                                       </div>
                                     </div>
-                                    {currentCalibration && currentCalibration.calibratedReason && (
-                                      <div className="rounded-md px-2 py-1" style={{ background: '#F8F9FA' }}>
-                                        <p className="text-xs leading-5" style={{ color: '#1F2329' }}>
-                                          人工校准原因：{currentCalibration.calibratedReason}
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
+                                  );
+                                })}
+                              </div>
                             </div>
-                          </>
-                        )}
-
-                        {/* 平稳风险 */}
-                        {groupedRiskTypes.stable.length > 0 && (
-                          <>
-                            <div className="flex items-center gap-1.5 mt-1">
-                              <YesFilled style={{ color: '#32A645', fontSize: 16 }} />
-                              <span className="text-sm font-medium" style={{ color: '#1F2329' }}>平稳风险</span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              {groupedRiskTypes.stable.map((riskType) => {
-                                const currentCalibration = manualCalibrations[riskType.id];
-                                const computedStatus = getRiskTypeComputedStatus(riskType);
-                                const statusColor = computedStatus === 'green' ? '#32A645' : computedStatus === 'orange' ? '#FF811A' : '#F54A45';
-                                const indicators = currentCalibration ? currentCalibration.calibratedIndicators : riskType.indicators;
-                                return (
-                                  <div key={riskType.id} className="bg-white border border-solid rounded-xl overflow-hidden p-3 flex flex-col gap-2.5" style={{ borderColor: '#DEE0E3', borderWidth: '0.5px' }}>
-                                    <div className="flex items-center justify-between h-[22px]">
-                                      <div className="flex items-center gap-2">
-                                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><circle cx="4" cy="4" r="4" fill={statusColor}/></svg>
-                                        <span className="text-sm font-medium" style={{ color: '#1F2329' }}>{riskType.name}</span>
-                                        {currentCalibration && (
-                                          <span className="px-1.5 rounded text-xs leading-5" style={{ background: 'rgba(31,35,41,0.1)', color: '#1F2329' }}>人工校准</span>
-                                        )}
-                                      </div>
-                                      <Button type="text" size="small" onClick={() => {
-                                        setCalibrationFormRiskId(riskType.id);
-                                        setCalibrationFormLevel(currentCalibration?.calibratedStatus || null);
-                                        setCalibrationFormReason(currentCalibration?.calibratedReason || '');
-                                      }}>校准</Button>
-                                    </div>
-                                    <div className="w-full" style={{ height: '0.5px', background: '#DEE0E3' }} />
-                                    <div className="flex justify-between">
-                                      <div className="flex flex-col gap-1 text-xs" style={{ color: '#1F2329' }}>
-                                        {indicators.map((ind, idx) => (
-                                          <span key={idx} className="leading-5 whitespace-nowrap">{ind.label}</span>
-                                        ))}
-                                      </div>
-                                      <div className="flex flex-col gap-1">
-                                        {indicators.map((ind, idx) => (
-                                          <div key={idx} className="flex items-center gap-1 leading-5">
-                                            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                                              <circle cx="4" cy="4" r="4" fill={ind.status === 'red' ? '#F54A45' : ind.status === 'orange' ? '#FF811A' : '#32A645'}/>
-                                            </svg>
-                                            <span className="text-xs whitespace-nowrap" style={{ color: '#1F2329' }}>{ind.value}</span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </div>
-                                    {currentCalibration && currentCalibration.calibratedReason && (
-                                      <div className="rounded-md px-2 py-1" style={{ background: '#F8F9FA' }}>
-                                        <p className="text-xs leading-5" style={{ color: '#1F2329' }}>
-                                          人工校准原因：{currentCalibration.calibratedReason}
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </>
-                        )}
-                      </div>
+                          </div>
+                        );
+                      })}
                     </div>
-
-                    {/* Overview Footer */}
-                    <div className="flex items-center justify-end gap-3 p-6">
-                      <Button type="outlined" size="medium" onClick={() => { setIsCalibrationDrawerOpen(false); }}>
-                        取消
-                      </Button>
-                      <Button type="filled" size="medium" onClick={() => { setIsCalibrationDrawerOpen(false); }}>
-                        保存
-                      </Button>
-                    </div>
-                  </>
-                )}
+                  </div>
+                </div>
               </motion.div>
             </>
           )}

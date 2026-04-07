@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Button, Tooltip } from '@universe-design/react';
+import { Menu, Button } from '@universe-design/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function Layout() {
@@ -46,19 +46,16 @@ export default function Layout() {
             inlineCollapsed={collapsed}
             style={{ borderRight: 'none', backgroundColor: 'transparent', flex: 1 }}
           >
-            <Tooltip content="仅做展示，不可点击" placement="right">
-              <Menu.Item
-                key="data-dashboard"
-                disabled
-                icon={
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2h-8v2h4a1 1 0 1 1 0 2H7a1 1 0 1 1 0-2h4v-2H3c-1.1 0-2-.9-2-2V4Zm20 0H3v12h18V4Z" fill="currentColor"/>
-                  </svg>
-                }
-              >
-                数据驾驶舱
-              </Menu.Item>
-            </Tooltip>
+            <Menu.Item
+              key="data-dashboard"
+              icon={
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2h-8v2h4a1 1 0 1 1 0 2H7a1 1 0 1 1 0-2h4v-2H3c-1.1 0-2-.9-2-2V4Zm20 0H3v12h18V4Z" fill="currentColor"/>
+                </svg>
+              }
+            >
+              数据驾驶舱
+            </Menu.Item>
             <Menu.Item
               key="workplace-profile"
               icon={
@@ -70,34 +67,28 @@ export default function Layout() {
             >
               职场安全档案
             </Menu.Item>
-            <Tooltip content="仅做展示，不可点击" placement="right">
-              <Menu.Item
-                key="security-status"
-                disabled
-                icon={
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M13 3a1 1 0 0 1-2 0V2a1 1 0 1 1 2 0v1Zm4.98 1.945a1 1 0 1 1-1.732-1l.45-.78a1 1 0 0 1 1.732 1l-.45.78Zm1.698 3.359a1 1 0 0 0 1.366.366l.373-.215a1 1 0 1 0-1-1.732l-.373.215a1 1 0 0 0-.366 1.366ZM2.59 8.455a1 1 0 0 1 1-1.732l.374.215a1 1 0 0 1-1 1.732l-.373-.215ZM5.945 2.8a1 1 0 0 0-.366 1.366l.45.78a1 1 0 0 0 1.732-1l-.45-.78A1 1 0 0 0 5.945 2.8ZM9 12a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z" fill="currentColor"/>
-                    <path d="M20 12.758C20 8.473 16.307 5 12 5c-4.308 0-7.992 3.473-7.992 7.758V21H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2h-1v-8.242Zm-13.998-.175C6.097 9.484 8.746 7 12 7c3.313 0 6 2.577 6 5.756V21H6v-8.244l.002-.173Z" fill="currentColor"/>
-                  </svg>
-                }
-              >
-                安全状态管理
-              </Menu.Item>
-            </Tooltip>
-            <Tooltip content="仅做展示，不可点击" placement="right">
-              <Menu.Item
-                key="knowledge-base"
-                disabled
-                icon={
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7 8.5a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1Zm0 4a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1Zm0 4a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1Z" fill="currentColor"/>
-                    <path d="M3 3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3Zm2 0v18h14V3H5Z" fill="currentColor"/>
-                  </svg>
-                }
-              >
-                知识库管理
-              </Menu.Item>
-            </Tooltip>
+            <Menu.Item
+              key="security-status"
+              icon={
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M13 3a1 1 0 0 1-2 0V2a1 1 0 1 1 2 0v1Zm4.98 1.945a1 1 0 1 1-1.732-1l.45-.78a1 1 0 0 1 1.732 1l-.45.78Zm1.698 3.359a1 1 0 0 0 1.366.366l.373-.215a1 1 0 1 0-1-1.732l-.373.215a1 1 0 0 0-.366 1.366ZM2.59 8.455a1 1 0 0 1 1-1.732l.374.215a1 1 0 0 1-1 1.732l-.373-.215ZM5.945 2.8a1 1 0 0 0-.366 1.366l.45.78a1 1 0 0 0 1.732-1l-.45-.78A1 1 0 0 0 5.945 2.8ZM9 12a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z" fill="currentColor"/>
+                  <path d="M20 12.758C20 8.473 16.307 5 12 5c-4.308 0-7.992 3.473-7.992 7.758V21H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2h-1v-8.242Zm-13.998-.175C6.097 9.484 8.746 7 12 7c3.313 0 6 2.577 6 5.756V21H6v-8.244l.002-.173Z" fill="currentColor"/>
+                </svg>
+              }
+            >
+              安全状态管理
+            </Menu.Item>
+            <Menu.Item
+              key="knowledge-base"
+              icon={
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 8.5a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1Zm0 4a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1Zm0 4a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1Z" fill="currentColor"/>
+                  <path d="M3 3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3Zm2 0v18h14V3H5Z" fill="currentColor"/>
+                </svg>
+              }
+            >
+              知识库管理
+            </Menu.Item>
           </Menu>
           
           <div className="p-4 border-t border-divider-light flex justify-center mt-auto">
