@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-bg-body: var(--bg-base, #f2f3f5);
+  --color-bg-container: var(--bg-body, #ffffff);
+  --color-ud-body: var(--bg-body, #ffffff);
+  --color-bg-overlay: #ffffff;
+  /* UD N100 / secondary neutral hover (udtoken_btn_se_bg_neutral_hover) */
+  --color-ud-hover: #f2f3f5;
+  --color-bg-content-base: #f6f7f9;
+  --color-text-title: #1a1a1a;
+  --color-text-caption: #6b7280;
+  --color-text-placeholder: #9ca3af;
+  --color-text-body: #374151;
+  --color-primary: #2563eb;
+  --color-primary-light: #dbeafe;
+  --color-primary-bg: #eff6ff;
+  --color-divider: #e5e7eb;
+  --color-divider-light: #f3f4f6;
+  --color-stroke-border: #e5e7eb;
+  --color-tag-blue-bg: #dbeafe;
+  --color-tag-blue-text: #1d4ed8;
+  --color-tag-orange-text: #c2410c;
+  --color-tag-green-text: #15803d;
+  --color-status-yellow: #eab308;
+  --color-status-green: #1BCEBF;
+  --color-status-orange: #3370EB;
+  --color-status-red: #ef4444;
+  --color-status-grey: #ED6D0C;
+}
+
+@layer base {
+  body {
+    @apply bg-bg-body text-text-body antialiased;
+    overflow: hidden;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c2c6cc;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8f959e;
+}
+
+/*
+ * UD Menu：disabled 项在 rc-menu 下仍会带上 :active / .ud__menu-item-active，
+ * 通用 item:active、item-active 规则特异性更高，会盖住 item-disabled。
+ * 见 @universe-design/react/lib/menu/style/index.less
+ */
+.ud__menu-item-disabled:hover,
+.ud__menu-item-disabled:active,
+.ud__menu-item-disabled.ud__menu-item-active {
+  background: none !important;
+  background-color: transparent !important;
+}
+
+/* Filters: universe design Select style adjustments */
+.filters .ud__select__selector {
+  border: none !important;
+  background-color: #f5f5f5; /* neutral/100 */
+  padding-left: 12px;
+  padding-right: 12px;
+  width: max-content;
+}

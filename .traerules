@@ -1,0 +1,34 @@
+# 项目说明与 AI 规则配置 (Project Rules & Context)
+
+## 1. 项目基本信息
+- **项目描述**：物理安全 Profile 看板（包含职场安全状态、风险类型、整改任务等核心指标）
+- **技术栈**：
+  - 框架：React 19 + TypeScript + Vite
+  - 样式：Tailwind CSS + Less (支持 css variable)
+  - 路由：React Router DOM
+  - 组件库：**@universe-design/react** (内部组件库)
+  - 图标库：**lucide-react** (部分基础图标) / **@universe-design/icons-react** (UD 规范图标)
+
+## 2. 核心代码规范 & 约束
+- **始终保持中文回复**。
+- **严格遵循 Universe Design (UD) 规范**：
+  - 新增任何通用 UI 元素（如表格、按钮、选择器、标签等）必须优先使用 `@universe-design/react`，禁止手写原生 HTML 标签代替。
+  - 颜色变量必须使用 UD 规范色值，例如 `--color-bg-body` 映射到 `var(--bg-base, #f2f3f5)`。
+  - 弹窗、分页器、下拉框等交互组件必须使用 UD 官方组件。
+- 样式处理：
+  - 基础排版和布局优先使用 Tailwind CSS。
+  - 涉及主题色和组件深度定制时，使用 Less 并覆盖 UD 的 CSS 变量。
+- **状态与数据管理**：
+  - 组件内部状态使用 React Hooks (useState, useEffect, useMemo 等)。
+  - 避免过度使用 any，保持 TypeScript 的严格类型定义。
+
+## 3. 当前开发进度 & 已有功能 (Context)
+如果你是新接手本项目的 AI，请注意以下已完成的功能模块：
+1. **职场安全状态表格**：已接入 UD `Table` 组件，支持对状态、整改任务数、安全天数进行排序。
+2. **分页功能**：已在表格下方集成 UD `Pagination` 组件，具备页码切换和每页条数调整功能，前端基于 `useMemo` 实现数据切片。
+3. **筛选模块**：搜索框右侧的筛选项已全部替换为 UD `Select` 组件（支持城市、安全状态、风险类型、逾期状态筛选）。
+4. **顶部指标卡**：已统一调整为 UD 的 body 底色，圆角统一为 `12px`。
+5. **项目配置**：`vite.config.ts` 已配置好 Less 变量注入，`main.tsx` 已全局引入 UD 的 light 主题样式。
+
+## 4. Git 操作规范
+- 部署/提测时，仅将打包后的 `dist` 目录推送到特定的 `launch` 分支（通常使用 `git subtree push` 技术），不要将整个源码推送到该分支。

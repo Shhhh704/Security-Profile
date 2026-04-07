@@ -1,0 +1,31 @@
+# 因项目依赖字节内部私有包（@universe-design/*），
+# 无法在 GitHub Actions 公网环境执行 npm install，
+# 改为在本地构建后将 dist 推送到 gh-pages 分支，由 Pages 直接托管。
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [gh-pages]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - uses: actions/deploy-pages@v4
+        id: deployment
