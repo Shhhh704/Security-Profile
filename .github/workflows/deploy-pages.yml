@@ -25,9 +25,9 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-      # npm@10 在少量场景下会出现 "Exit handler never called"；
-      # 使用 npm install + lockfile 既能稳定安装，也能保证版本一致。
-      - run: npm install --legacy-peer-deps --no-audit --no-fund
+      # 根因：lockfile 里 vite 是 dev 依赖（dev: true），
+      # 若 CI 环境省略 dev 依赖会导致 "vite: not found"。
+      - run: npm install --include=dev --legacy-peer-deps --no-audit --no-fund
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
