@@ -16,19 +16,19 @@ export default function WorkplaceDashboard() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [cityFilter, setCityFilter] = useState<string>('all');
-  const [riskTypeFilter, setRiskTypeFilter] = useState<string>('all');
-  const [overdueFilter, setOverdueFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [cityFilter, setCityFilter] = useState<string | undefined>(undefined);
+  const [riskTypeFilter, setRiskTypeFilter] = useState<string | undefined>(undefined);
+  const [overdueFilter, setOverdueFilter] = useState<string | undefined>(undefined);
 
-  const hasFilters = searchQuery || statusFilter !== 'all' || cityFilter !== 'all' || riskTypeFilter !== 'all' || overdueFilter !== 'all';
+  const hasFilters = searchQuery || statusFilter !== undefined || cityFilter !== undefined || riskTypeFilter !== undefined || overdueFilter !== undefined;
 
   const clearAllFilters = () => {
     setSearchQuery('');
-    setStatusFilter('all');
-    setCityFilter('all');
-    setRiskTypeFilter('all');
-    setOverdueFilter('all');
+    setStatusFilter(undefined);
+    setCityFilter(undefined);
+    setRiskTypeFilter(undefined);
+    setOverdueFilter(undefined);
   };
 
   useEffect(() => {
@@ -52,18 +52,18 @@ export default function WorkplaceDashboard() {
   const filteredWorkplaces = useMemo(() => {
     let result = [...workplaces];
 
-    if (statusFilter !== 'all') {
+    if (statusFilter) {
       result = result.filter(w => w.status === statusFilter);
     }
-    if (cityFilter !== 'all') {
+    if (cityFilter) {
       result = result.filter(w => w.city === cityFilter);
     }
-    if (riskTypeFilter !== 'all') {
+    if (riskTypeFilter) {
       result = result.filter(w =>
         w.risks && w.risks.some(risk => risk.type === riskTypeFilter)
       );
     }
-    if (overdueFilter !== 'all') {
+    if (overdueFilter) {
       if (overdueFilter === 'yes') {
         result = result.filter(w => w.rectificationTasks.overdue > 0);
       } else if (overdueFilter === 'no') {
@@ -391,19 +391,19 @@ export default function WorkplaceDashboard() {
             </div>
             <Select
               value={cityFilter}
-              onChange={(value) => setCityFilter(value as string)}
+              onChange={(value) => setCityFilter(value as string | undefined)}
+              placeholder="城市"
+              allowClear
               style={{ width: 'fit-content' }}
-              options={[
-                { label: '城市', value: 'all' },
-                ...uniqueCities.map(city => ({ label: city, value: city }))
-              ]}
+              options={uniqueCities.map(city => ({ label: city, value: city }))}
             />
             <Select
               value={statusFilter}
-              onChange={(value) => setStatusFilter(value as string)}
+              onChange={(value) => setStatusFilter(value as string | undefined)}
+              placeholder="安全状态"
+              allowClear
               style={{ width: 'fit-content' }}
               options={[
-                { label: '安全状态', value: 'all' },
                 { label: '红灯', value: 'red' },
                 { label: '黄灯', value: 'yellow' },
                 { label: '绿灯', value: 'green' }
@@ -411,19 +411,19 @@ export default function WorkplaceDashboard() {
             />
             <Select
               value={riskTypeFilter}
-              onChange={(value) => setRiskTypeFilter(value as string)}
+              onChange={(value) => setRiskTypeFilter(value as string | undefined)}
+              placeholder="风险类型"
+              allowClear
               style={{ width: 'fit-content' }}
-              options={[
-                { label: '风险类型', value: 'all' },
-                ...uniqueRiskTypes.map(riskType => ({ label: riskType, value: riskType }))
-              ]}
+              options={uniqueRiskTypes.map(riskType => ({ label: riskType, value: riskType }))}
             />
             <Select
               value={overdueFilter}
-              onChange={(value) => setOverdueFilter(value as string)}
-              style={{ width: 160 }}
+              onChange={(value) => setOverdueFilter(value as string | undefined)}
+              placeholder="整改任务逾期"
+              allowClear
+              style={{ width: 'fit-content' }}
               options={[
-                { label: '整改任务逾期', value: 'all' },
                 { label: '是', value: 'yes' },
                 { label: '否', value: 'no' }
               ]}
