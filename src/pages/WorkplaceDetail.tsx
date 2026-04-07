@@ -1168,7 +1168,7 @@ export default function WorkplaceDetail() {
                               onClick={() => setExpandedEmergencyTypes(prev => 
                                 prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
                               )}
-                              className="w-full flex items-center justify-between p-3 bg-bg-content-base rounded-lg hover:bg-bg-overlay transition-colors"
+                              className="w-full flex items-center justify-between p-3 bg-bg-content-base rounded-lg hover:bg-ud-hover transition-colors"
                             >
                               <span className="text-sm font-medium text-text-title">{label}</span>
                               <ChevronDown 

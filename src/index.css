@@ -7,6 +7,8 @@
   --color-bg-container: var(--bg-body, #ffffff);
   --color-ud-body: var(--bg-body, #ffffff);
   --color-bg-overlay: #ffffff;
+  /* UD N100 / secondary neutral hover (udtoken_btn_se_bg_neutral_hover) */
+  --color-ud-hover: #f2f3f5;
   --color-bg-content-base: #f6f7f9;
   --color-text-title: #1a1a1a;
   --color-text-caption: #6b7280;
@@ -53,6 +55,18 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #8f959e;
+}
+
+/*
+ * UD Menu：disabled 项在 rc-menu 下仍会带上 :active / .ud__menu-item-active，
+ * 通用 item:active、item-active 规则特异性更高，会盖住 item-disabled。
+ * 见 @universe-design/react/lib/menu/style/index.less
+ */
+.ud__menu-item-disabled:hover,
+.ud__menu-item-disabled:active,
+.ud__menu-item-disabled.ud__menu-item-active {
+  background: none !important;
+  background-color: transparent !important;
 }
 
 /* Filters: universe design Select style adjustments */

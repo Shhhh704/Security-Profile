@@ -1,7 +1,61 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import type { ReactNode } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Button } from '@universe-design/react';
+import { Menu, Button, Tooltip } from '@universe-design/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+
+/** 侧栏占位项 hover 提示（收起态走 Menu.Item 内置 Tooltip；展开态需单独包一层，因 UD MenuItem 在展开时会关掉 Tooltip） */
+const DISABLED_NAV_TOOLTIP = '本期仅为占位，暂不可点击';
+
+type SideNavEntry =
+  | { kind: 'disabled'; key: string; label: string; icon: ReactNode }
+  | { kind: 'enabled'; key: string; label: string; icon: ReactNode };
+
+const SIDE_NAV_ITEMS: SideNavEntry[] = [
+  {
+    kind: 'disabled',
+    key: 'data-dashboard',
+    label: '数据驾驶舱',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1 4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2h-8v2h4a1 1 0 1 1 0 2H7a1 1 0 1 1 0-2h4v-2H3c-1.1 0-2-.9-2-2V4Zm20 0H3v12h18V4Z" fill="currentColor" />
+      </svg>
+    ),
+  },
+  {
+    kind: 'enabled',
+    key: 'workplace-profile',
+    label: '职场安全档案',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7 7.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1Zm4.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1ZM7 11.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1Zm4.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1Z" fill="currentColor" />
+        <path d="M5 23a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5ZM15 3H5v18h3v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h3V3Zm2 18h2V7h-2v14Z" fill="currentColor" />
+      </svg>
+    ),
+  },
+  {
+    kind: 'disabled',
+    key: 'security-status',
+    label: '安全状态管理',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13 3a1 1 0 0 1-2 0V2a1 1 0 1 1 2 0v1Zm4.98 1.945a1 1 0 1 1-1.732-1l.45-.78a1 1 0 0 1 1.732 1l-.45.78Zm1.698 3.359a1 1 0 0 0 1.366.366l.373-.215a1 1 0 1 0-1-1.732l-.373.215a1 1 0 0 0-.366 1.366ZM2.59 8.455a1 1 0 0 1 1-1.732l.374.215a1 1 0 0 1-1 1.732l-.373-.215ZM5.945 2.8a1 1 0 0 0-.366 1.366l.45.78a1 1 0 0 0 1.732-1l-.45-.78A1 1 0 0 0 5.945 2.8ZM9 12a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z" fill="currentColor" />
+        <path d="M20 12.758C20 8.473 16.307 5 12 5c-4.308 0-7.992 3.473-7.992 7.758V21H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2h-1v-8.242Zm-13.998-.175C6.097 9.484 8.746 7 12 7c3.313 0 6 2.577 6 5.756V21H6v-8.244l.002-.173Z" fill="currentColor" />
+      </svg>
+    ),
+  },
+  {
+    kind: 'disabled',
+    key: 'knowledge-base',
+    label: '知识库管理',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7 8.5a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1Zm0 4a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1Zm0 4a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1Z" fill="currentColor" />
+        <path d="M3 3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3Zm2 0v18h14V3H5Z" fill="currentColor" />
+      </svg>
+    ),
+  },
+];
 
 export default function Layout() {
   const location = useLocation();
@@ -46,58 +100,44 @@ export default function Layout() {
             inlineCollapsed={collapsed}
             style={{ borderRight: 'none', backgroundColor: 'transparent', flex: 1 }}
           >
-            <Menu.Item
-              key="data-dashboard"
-              icon={
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1 4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2h-8v2h4a1 1 0 1 1 0 2H7a1 1 0 1 1 0-2h4v-2H3c-1.1 0-2-.9-2-2V4Zm20 0H3v12h18V4Z" fill="currentColor"/>
-                </svg>
-              }
-            >
-              数据驾驶舱
-            </Menu.Item>
-            <Menu.Item
-              key="workplace-profile"
-              icon={
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7 7.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1Zm4.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1ZM7 11.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1Zm4.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1Z" fill="currentColor"/>
-                  <path d="M5 23a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5ZM15 3H5v18h3v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h3V3Zm2 18h2V7h-2v14Z" fill="currentColor"/>
-                </svg>
-              }
-            >
-              职场安全档案
-            </Menu.Item>
-            <Menu.Item
-              key="security-status"
-              icon={
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M13 3a1 1 0 0 1-2 0V2a1 1 0 1 1 2 0v1Zm4.98 1.945a1 1 0 1 1-1.732-1l.45-.78a1 1 0 0 1 1.732 1l-.45.78Zm1.698 3.359a1 1 0 0 0 1.366.366l.373-.215a1 1 0 1 0-1-1.732l-.373.215a1 1 0 0 0-.366 1.366ZM2.59 8.455a1 1 0 0 1 1-1.732l.374.215a1 1 0 0 1-1 1.732l-.373-.215ZM5.945 2.8a1 1 0 0 0-.366 1.366l.45.78a1 1 0 0 0 1.732-1l-.45-.78A1 1 0 0 0 5.945 2.8ZM9 12a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z" fill="currentColor"/>
-                  <path d="M20 12.758C20 8.473 16.307 5 12 5c-4.308 0-7.992 3.473-7.992 7.758V21H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2h-1v-8.242Zm-13.998-.175C6.097 9.484 8.746 7 12 7c3.313 0 6 2.577 6 5.756V21H6v-8.244l.002-.173Z" fill="currentColor"/>
-                </svg>
-              }
-            >
-              安全状态管理
-            </Menu.Item>
-            <Menu.Item
-              key="knowledge-base"
-              icon={
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7 8.5a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1Zm0 4a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1Zm0 4a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2H8a1 1 0 0 1-1-1Z" fill="currentColor"/>
-                  <path d="M3 3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3Zm2 0v18h14V3H5Z" fill="currentColor"/>
-                </svg>
-              }
-            >
-              知识库管理
-            </Menu.Item>
+            {SIDE_NAV_ITEMS.map((entry) =>
+              entry.kind === 'enabled' ? (
+                <Menu.Item key={entry.key} icon={entry.icon}>
+                  {entry.label}
+                </Menu.Item>
+              ) : (
+                <Menu.Item
+                  key={entry.key}
+                  disabled
+                  title={collapsed ? DISABLED_NAV_TOOLTIP : false}
+                  icon={collapsed ? entry.icon : undefined}
+                >
+                  {collapsed ? (
+                    entry.label
+                  ) : (
+                    <Tooltip title={DISABLED_NAV_TOOLTIP} placement="right">
+                      <span className="flex w-full min-w-0 items-center gap-2">
+                        <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-current [&>svg]:h-4 [&>svg]:w-4">
+                          {entry.icon}
+                        </span>
+                        <span className="min-w-0 flex-1">{entry.label}</span>
+                      </span>
+                    </Tooltip>
+                  )}
+                </Menu.Item>
+              )
+            )}
           </Menu>
           
-          <div className="p-4 border-t border-divider-light flex justify-center mt-auto">
+          <div className="p-4 border-t border-divider-light flex justify-start mt-auto">
             <Button
               type="text"
-              color="primary"
+              color="default"
               onClick={() => setCollapsed(!collapsed)}
               icon={collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-            />
+            >
+              {!collapsed && '收起'}
+            </Button>
           </div>
         </div>
 
