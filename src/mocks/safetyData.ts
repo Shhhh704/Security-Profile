@@ -3,8 +3,8 @@ import type { SafetyRiskType, RiskAssessmentData, OfficeInfo } from '../types';
 export const SAFETY_RISK_TYPES: SafetyRiskType[] = [
   {
     id: 'entry', name: '出入安全', indicators: [
-      { label: '闯入事件量级', value: '≥ 2 次', status: 'red' },
-      { label: '闯入报警响应时效', value: '达标', status: 'green' },
+      { label: '无权限人员闯入次数', value: '10次', status: 'green' },
+      { label: '闯入报警响应时效达标率', value: '达标', status: 'green' },
     ],
   },
   {

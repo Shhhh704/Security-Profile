@@ -48,7 +48,18 @@ export default function WorkplaceDetail() {
     setExpandedRows(rowsWithChildren);
   }, []);
 
-  const [manualCalibrations, setManualCalibrations] = useState<Record<string, ManualCalibration>>({});
+  const [manualCalibrations, setManualCalibrations] = useState<Record<string, ManualCalibration>>({
+    entry: {
+      riskTypeId: 'entry',
+      calibratedStatus: 'red',
+      calibratedIndicators: [
+        { label: '无权限人员闯入次数', value: '10次', status: 'green' },
+        { label: '闯入报警响应时效达标率', value: '达标', status: 'green' },
+      ],
+      calibratedReason: '近期地铁改造，导致出入口人流激增，高峰期尾随情况加剧，但保安无法逐一甄别',
+      calibratedAt: '2026-03-28 12:03',
+    },
+  });
   const [isCalibrationDrawerOpen, setIsCalibrationDrawerOpen] = useState(false);
   const [calibratingIndicatorsByType, setCalibratingIndicatorsByType] = useState<Record<string, SafetyIndicator[]>>({});
   const [calibratingStatusByType, setCalibratingStatusByType] = useState<Record<string, 'green' | 'orange' | 'red'>>({});
@@ -643,10 +654,12 @@ export default function WorkplaceDetail() {
                                     <circle cx="4" cy="4" r="4" fill={index === 1 ? '#FF811A' : '#E22E28'}/>
                                   </svg>
                                   <span className="text-sm font-semibold text-text-title">
-                                    {riskType.name}{index === 0 && '（人工校准）'}
+                                    {riskType.name}
                                   </span>
+                                  {calibration && <Tag size="small" color="neutral">人工校准</Tag>}
                                 </div>
                               </div>
+                              <div style={{ height: 0.5, backgroundColor: '#DEE0E3' }} />
                               <div className="bg-white p-3 pr-3 flex-1">
                                 <div className="flex flex-col gap-2">
                                   {indicators.map((indicator, idx) => {
@@ -743,6 +756,7 @@ export default function WorkplaceDetail() {
                                   </div>
                                 </div>
                                 
+                                <div style={{ height: 0.5, backgroundColor: '#DEE0E3', width: 'calc(100% + 24px)', margin: '10px -12px 0' }} />
                                 <div className="mt-3 flex flex-col gap-2">
                                   {indicators.map((indicator, idx) => {
                                     return (
