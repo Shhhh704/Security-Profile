@@ -385,7 +385,7 @@ export default function WorkplaceDashboard() {
               <Input
                 placeholder="搜索职场名称"
                 value={searchQuery}
-                onChange={(value) => setSearchQuery(value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 prefix={<Search size={18} />}
               />
             </div>
